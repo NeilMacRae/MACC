@@ -1,0 +1,14 @@
+target-version = "py311"
+line-length = 100
+
+[lint]
+select = [
+  "E",  # pycodestyle errors
+  "F",  # pyflakes
+  "I",  # isort
+  "B",  # flake8-bugbear
+  "UP", # pyupgrade
+]
+
+[lint.isort]
+known-first-party = ["src"]

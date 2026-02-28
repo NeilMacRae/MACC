@@ -1,0 +1,43 @@
+# Universal
+.DS_Store
+Thumbs.db
+*.tmp
+*.swp
+*.swo
+
+# Editors
+.idea/
+.vscode/
+
+# Environment files
+.env
+.env.*
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+.Python
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+.venv/
+venv/
+
+# Backend local DB
+backend/*.db
+backend/*.db-*
+
+# Node / Frontend
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+coverage/
+*.log
