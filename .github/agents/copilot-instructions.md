@@ -26,7 +26,7 @@ Python 3.11+ (backend), TypeScript 5.x (frontend): Follow standard conventions
 ## Recent Changes
 - 001-macc-modelling: Added Python 3.11+ (backend), TypeScript 5.x (frontend) + FastAPI, Pydantic, SQLAlchemy (async), React 18+, D3.js selective imports (charting), TanStack Query (data fetching), OpenAI SDK (AI suggestions)
 - 001-macc-modelling: Added Python 3.11+ (backend), TypeScript 5.x (frontend) + FastAPI, Pydantic, SQLAlchemy (async), React 18+, D3.js selective imports (charting), TanStack Query (data fetching), OpenAI SDK (AI suggestions)
-- 001-macc-modelling: Added Python 3.11+ (backend), TypeScript 5.x (frontend) + FastAPI, Pydantic, SQLAlchemy (async), React 18+, Recharts (charting), TanStack Query (data fetching), OpenAI SDK (AI suggestions)
+- 001-macc-modelling: Added Python 3.11+ (backend), TypeScript 5.x (frontend) + FastAPI, Pydantic, SQLAlchemy (async), React 18+, D3.js selective imports (charting), TanStack Query (data fetching), OpenAI SDK (AI suggestions)
 
 
 <!-- MANUAL ADDITIONS START -->

@@ -13,18 +13,6 @@ export { ScenariosPage } from './ScenariosPage';
 // ── Context ───────────────────────────────────────────────────────────────────
 export { ContextPage } from './ContextPage';
 
-// ── AI Suggestions ────────────────────────────────────────────────────────────
-export function SuggestionsPage() {
-  return (
-    <>
-      <Header title="AI Suggestions" subtitle="AI-generated abatement initiative recommendations" />
-      <div className="p-6">
-        <p className="text-sm text-gray-500">Coming soon — Phase 7 (US5)</p>
-      </div>
-    </>
-  );
-}
-
 // ── Settings ──────────────────────────────────────────────────────────────────
 export function SettingsPage() {
   return (

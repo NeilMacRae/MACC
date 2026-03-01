@@ -328,10 +328,10 @@ async def seed(db: AsyncSession) -> None:
         organisation_id=org.id,
         industry_sector="Heavy Industrial Manufacturing",
         employee_count=4_200,
-        annual_revenue_eur=820_000_000,
+        annual_revenue_gbp=820_000_000,
         operating_geographies=["GB", "NO", "SE", "FI", "DK", "US", "CA", "DE", "SG"],
         sustainability_maturity="intermediate",
-        budget_constraint_eur=5_000_000,
+        budget_constraint_gbp=5_000_000,
         target_year=2040,
         notes=(
             "Verdant HI has committed to a 50% absolute reduction in Scope 1+2 by 2030 "

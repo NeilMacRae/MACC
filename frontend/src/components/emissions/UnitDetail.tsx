@@ -1,9 +1,11 @@
 // ─── UnitDetail ───────────────────────────────────────────────────────────────
+import { useState } from 'react';
 import type { MarketFactorType } from '../../types/emissions';
 import { useUnitDetail } from '../../hooks/useEmissions';
 import { ScopeBarChart } from './ScopeBarChart';
 import { LoadingSpinner } from '../layout/LoadingSpinner';
 import { Badge } from '../common/Badge';
+import { QualityBadge, type QualityLevel } from '../common/QualityBadge';
 
 interface UnitDetailProps {
   unitId: string;
@@ -17,6 +19,7 @@ function fmt(n: number) {
 }
 
 export function UnitDetail({ unitId, year, mft, onNavigate }: UnitDetailProps) {
+  const [qualityFilter, setQualityFilter] = useState<QualityLevel | 'all'>('all');
   const { data, isLoading, error } = useUnitDetail(unitId, year, mft);
 
   if (isLoading) return <div className="flex justify-center py-12"><LoadingSpinner label="Loading unit…" /></div>;
@@ -84,8 +87,18 @@ export function UnitDetail({ unitId, year, mft, onNavigate }: UnitDetailProps) {
       {/* Emission sources (for sites) */}
       {data.sources.length > 0 && (
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
-          <div className="border-b border-gray-200 bg-gray-50 px-5 py-3">
+          <div className="border-b border-gray-200 bg-gray-50 px-5 py-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700">Emission Sources</h3>
+            <select
+              value={qualityFilter}
+              onChange={(e) => setQualityFilter(e.target.value as QualityLevel | 'all')}
+              className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="all">All quality</option>
+              <option value="Actual">Actual only</option>
+              <option value="Estimated">Estimated only</option>
+              <option value="Missing">Missing only</option>
+            </select>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -94,12 +107,15 @@ export function UnitDetail({ unitId, year, mft, onNavigate }: UnitDetailProps) {
                   <th className="px-5 py-3 text-left">Activity</th>
                   <th className="px-5 py-3 text-left">Category</th>
                   <th className="px-5 py-3 text-left">Scopes</th>
+                  <th className="px-5 py-3 text-left">Quality</th>
                   <th className="px-5 py-3 text-left">Unit</th>
                   <th className="px-5 py-3 text-right">tCO₂e</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {data.sources.map((src) => (
+                {data.sources
+                  .filter(src => qualityFilter === 'all' || (src.quality ?? 'Actual') === qualityFilter)
+                  .map((src) => (
                   <tr key={src.id} className="hover:bg-gray-50">
                     <td className="max-w-xs truncate px-5 py-3 text-gray-800">{src.activity}</td>
                     <td className="px-5 py-3 text-gray-500">{src.question_group}</td>
@@ -114,6 +130,9 @@ export function UnitDetail({ unitId, year, mft, onNavigate }: UnitDetailProps) {
                           </Badge>
                         ))}
                       </div>
+                    </td>
+                    <td className="px-5 py-3">
+                      <QualityBadge quality={(src.quality ?? 'Actual') as QualityLevel} />
                     </td>
                     <td className="px-5 py-3 text-gray-400 text-xs">{src.answer_unit}</td>
                     <td className="px-5 py-3 text-right font-medium text-gray-800">

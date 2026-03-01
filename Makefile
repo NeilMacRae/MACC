@@ -8,7 +8,7 @@ BACKEND_UVICORN := $(shell if [ -x "$(BACKEND_DIR)/.venv/bin/uvicorn" ]; then ec
 BACKEND_ALEMBIC := $(shell if [ -x "$(BACKEND_DIR)/.venv/bin/alembic" ]; then echo "$(BACKEND_DIR)/.venv/bin/alembic"; else echo alembic; fi)
 
 run-backend:
-	cd $(BACKEND_DIR) && .venv/bin/uvicorn src.api.main:app --reload --port 8000
+	cd $(BACKEND_DIR) && set -a && [ -f .env ] && . ./.env && set +a && .venv/bin/uvicorn src.api.main:app --reload --port 8000
 
 run-frontend:
 	cd $(FRONTEND_DIR) && npm run dev

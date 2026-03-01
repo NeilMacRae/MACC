@@ -27,7 +27,7 @@ Build a stand-alone MACC modelling application enabling sustainability experts t
 |-----------|--------|-------|
 | **I. Code Quality** | ✅ PASS | Ruff + ESLint enforced; mypy strict + TS strict; single-responsibility service layer |
 | **II. Testing Standards** | ✅ PASS | pytest (backend) + Vitest (frontend); contract tests for all API endpoints; ≥80% coverage target |
-| **III. UX Consistency** | ✅ PASS | EcoOnline design patterns (sidebar nav, blue primary, clean tables/forms); WCAG 2.1 AA; loading states on all async ops |
+| **III. UX Consistency** | ✅ PASS | EcoOnline design patterns (sidebar nav with Emissions, MACC, Scenarios, Context, Settings — no separate AI Suggestions entry); WCAG 2.1 AA; loading states on all async ops |
 | **IV. Performance** | ✅ PASS | <200ms p95 API; <3s page load; SQLite indexed queries; no N+1; caching for aggregated emissions |
 | **V. API Integration** | ✅ PASS | REST/OpenAPI 3.x contracts defined before implementation; JWT auth; rate limiting + backoff on EcoOnline API calls; fault isolation; correlation ID logging |
 | **Quality Gates** | ✅ PASS | GitHub Actions CI with lint/type-check/test; PR review required; OpenAPI validation on endpoint changes |
@@ -118,17 +118,16 @@ frontend/
 │   │   ├── initiatives/         # Initiative form, list, lifecycle filters
 │   │   ├── scenarios/           # Scenario manager, comparison table
 │   │   ├── context/             # Org context form
-│   │   ├── suggestions/         # AI suggestion cards, accept/reject
+│   │   ├── suggestions/         # AI suggestion cards, accept/reject (rendered within MACC page)
 │   │   ├── targets/             # Target alignment view
 │   │   ├── export/              # Export controls
 │   │   └── common/              # Buttons, modals, loading states, badges
 │   ├── pages/
 │   │   ├── EmissionsPage.tsx
-│   │   ├── MACCPage.tsx
+│   │   ├── MACCPage.tsx          # Includes AI suggestion flow via "New Initiative" button
 │   │   ├── ScenariosPage.tsx
 │   │   ├── ContextPage.tsx
-│   │   ├── SuggestionsPage.tsx
-│   │   └── SettingsPage.tsx
+│   │   └── SettingsPage.tsx      # Includes AI constraint config
 │   ├── hooks/
 │   │   ├── useEmissions.ts
 │   │   ├── useInitiatives.ts
@@ -173,7 +172,7 @@ Each phase delivers a working increment that can be run locally and demonstrated
 | 1.3 | Alembic migrations | Initial migration creating all tables; batch mode for SQLite |
 | 1.4 | Sample data seeder | `seed_data.py` generating realistic org hierarchy, emission sources & records (based on `company_construct` / `answers_construct` patterns) |
 | 1.5 | JWT auth middleware | Token validation on all endpoints; dev token generator for local testing |
-| 1.6 | Frontend scaffold | Vite + React + TypeScript; app shell with sidebar nav matching EcoOnline patterns; routing to empty pages |
+| 1.6 | Frontend scaffold | Vite + React + TypeScript; app shell with sidebar nav (Emissions, MACC, Scenarios, Context, Settings — no separate AI Suggestions entry); routing to empty pages |
 | 1.7 | API client | Typed fetch wrapper with JWT injection, error handling, base URL config |
 | 1.8 | Dev tooling | Makefile (`run-backend`, `run-frontend`, `seed`, `test`, `lint`); Ruff, ESLint, mypy, tsconfig strict |
 
@@ -278,31 +277,33 @@ Each phase delivers a working increment that can be run locally and demonstrated
 
 ### Phase 5: AI Suggestions
 
-**Goal**: AI generates relevant abatement suggestions based on org context and emissions.
+**Goal**: AI generates relevant abatement suggestions accessed via the unified "New Initiative" flow on the MACC page. Users choose between manual initiative creation and AI-assisted suggestion within the same entry point. No separate AI Suggestions page exists.
 
 **User Stories**: US4 (AI Suggestions), US9 (AI Constraints)
+
+**UX Design Note**: The "New Initiative" button on the MACC page opens a modal/flow where the user picks either "Create manually" (existing initiative form) or "Ask AI to suggest". The AI path collects a priority mode (cost-focused or highest-impact), then shows results inline. Constraint configuration lives on the Settings page, not within the suggestion flow itself.
 
 | # | Deliverable | Details |
 |---|-------------|---------|
 | 5.1 | OpenAI client | AsyncOpenAI singleton, gpt-4o-2024-08-06 pinned, structured outputs via Pydantic, retry/timeout |
-| 5.2 | Suggestion service | Prompt construction from org context + emissions profile + constraints; response parsing |
+| 5.2 | Suggestion service | Prompt construction from org context + emissions profile + constraints; response parsing; multi-activity breakdown logic; low-confidence fallback when constraints can't be fully met |
 | 5.3 | Constraint endpoints | `GET/PUT /api/v1/ai/constraints` per ai-suggestions-api.md |
-| 5.4 | Suggestion endpoints | `POST /ai/suggestions`, `GET` history, accept/dismiss per contract |
-| 5.5 | Constraint config page | Form for excluded technologies, budget limits, scope exclusions |
-| 5.6 | Suggestion request UI | Scope focus selector, priority mode, loading state (5-15s) |
-| 5.7 | Suggestion cards | Card per suggestion with rationale, estimates, assumptions; accept/modify/dismiss actions |
-| 5.8 | Accept flow | Accept → creates initiative (type: ai_suggested) → optionally adds to scenario |
+| 5.4 | Suggestion endpoints | `POST /ai/suggestions` (with `priority: cost_effective \| high_impact`), `GET` history, accept/dismiss per contract |
+| 5.5 | Constraint config on Settings page | Form for excluded technologies, budget limits, scope exclusions — rendered as a section within SettingsPage.tsx |
+| 5.6 | "New Initiative" AI option | Extend "New Initiative" button/modal on MACC page with "Ask AI" path; priority mode selector (cost-focused / highest-impact); loading state (5-15s) |
+| 5.7 | Suggestion cards | Card per suggestion with rationale, estimates, assumptions, confidence level; accept/modify/dismiss actions; low-confidence flagging with constraint relaxation explanation |
+| 5.8 | Accept flow | Accept → per-activity breakdown review (for multi-activity suggestions) → creates initiative(s) (type: ai_suggested) globally → optional scenario add |
 | 5.9 | Visual distinction | AI-suggested vs manual initiatives differentiated on MACC chart and tables |
 
-**Milestone**: User requests suggestions, AI returns contextual initiatives with rationale, user accepts one which appears on the MACC chart distinguished as AI-generated.
+**Milestone**: User clicks "New Initiative" on MACC page, chooses "Ask AI", selects cost-focused mode, receives contextual suggestions with rationale. Accepts a multi-activity suggestion which splits into per-activity initiatives on the MACC chart, each visually distinguished as AI-generated.
 
 ---
 
 ### Phase 6: Export & Polish
 
-**Goal**: Reporting outputs, real data sync preparation, and UX polish.
+**Goal**: Reporting outputs, EcoOnline sync stubs (no real integration), and UX polish.
 
-**User Stories**: US11 (Export), US5 (full sync prep)
+**User Stories**: US11 (Export), US5 (sync stubs only)
 
 | # | Deliverable | Details |
 |---|-------------|---------|
@@ -310,13 +311,13 @@ Each phase delivers a working increment that can be run locally and demonstrated
 | 6.2 | MACC chart export | SVG/PNG export of current chart view |
 | 6.3 | Scenario report export | PDF/Excel summary with chart + metrics + target alignment |
 | 6.4 | Export endpoints | Per export-sync-api.md contract |
-| 6.5 | Sync endpoints | `POST /sync/emissions`, `GET /status`, `GET /history` — wired to stub/mock EcoOnline client |
-| 6.6 | EcoOnline client stub | Rate-limited client matching expected API shape; ready to point at real endpoints |
+| 6.5 | Sync endpoints | `POST /sync/emissions`, `GET /status`, `GET /history` — wired to stub EcoOnline client returning sample data |
+| 6.6 | EcoOnline client stub | Rate-limited client returning sample data; matches expected API shape but no real integration. Ready to point at real endpoints if/when needed. |
 | 6.7 | UX polish | Loading skeletons, empty states, error boundaries, keyboard navigation, responsive layout |
 | 6.8 | Accessibility audit | WCAG 2.1 AA pass on all pages |
 | 6.9 | Performance audit | API response times, chart render benchmarks, bundle size check |
 
-**Milestone**: User can export MACC charts and data for stakeholder presentations. Sync infrastructure is in place for when real EcoOnline API access is available.
+**Milestone**: User can export MACC charts and data for stakeholder presentations. Sync infrastructure is stubbed and ready for real API integration if/when needed.
 
 ---
 
@@ -329,8 +330,8 @@ Each phase delivers a working increment that can be run locally and demonstrated
 | 3 — MACC | US2, US7 | Interactive MACC chart with initiative CRUD |
 | 4 — Planning | US3, US6, US8, US10 | Targets, scenarios, comparison |
 | 4b — Feedback | US2, US7 (refined) | CapEx/OpEx model, cascade selection, GBP, warnings |
-| 5 — AI | US4, US9 | AI-generated suggestions with constraints |
-| 6 — Export | US11, US5 (sync) | Reporting, polish, sync prep |
+| 5 — AI | US4, US9 | AI suggestions via "New Initiative" on MACC page; constraints on Settings |
+| 6 — Export | US11, US5 (stubs) | Reporting, polish, EcoOnline sync stubs |
 
 ## Post-Design Constitution Re-Check
 
@@ -340,9 +341,9 @@ Each phase delivers a working increment that can be run locally and demonstrated
 |-----------|--------|----------|
 | **I. Code Quality** | ✅ PASS | Layered architecture enforces single-responsibility (Models → Schemas → Services → API). Type safety via Pydantic schemas + TypeScript strict. Ruff/ESLint in quickstart. |
 | **II. Testing Standards** | ✅ PASS | Test directories structured (unit/integration/contract). Contract tests planned for all 6 API contract files. ≥80% coverage target in quickstart. |
-| **III. UX Consistency** | ✅ PASS | EcoOnline design patterns in all frontend components. Loading states specified for AI suggestion requests (5-15s). Error responses are human-readable across all contracts. |
+| **III. UX Consistency** | ✅ PASS | EcoOnline design patterns in all frontend components. AI suggestions accessed via "New Initiative" button on MACC page (no separate page). Loading states specified for AI suggestion requests (5-15s). Error responses are human-readable across all contracts. |
 | **IV. Performance** | ✅ PASS | Data model includes composite indexes for emissions aggregation queries. MACC chart data pre-computed server-side. Pagination on all list endpoints. AI endpoint has 30s timeout. |
-| **V. API Integration** | ✅ PASS | 6 API contract files defined before implementation. JWT auth on all endpoints. Rate limiting on AI (10 req/min) and EcoOnline sync. Fault isolation: 502/504 errors for upstream failures. Sync audit trail via SyncLog entity. |
+| **V. API Integration** | ✅ PASS | 6 API contract files defined before implementation. JWT auth on all endpoints. Rate limiting on AI (10 req/min). EcoOnline sync is stub-only (no real integration). Fault isolation: 502/504 errors for upstream failures. Sync audit trail via SyncLog entity. |
 | **Quality Gates** | ✅ PASS | CI pipeline in quickstart. OpenAPI contracts serve as validation source. PR workflow documented. |
 
 **Post-Design Gate Result**: ✅ ALL PASS — proceed to Phase 2 (task breakdown).

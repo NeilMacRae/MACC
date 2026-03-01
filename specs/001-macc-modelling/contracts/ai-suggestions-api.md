@@ -23,7 +23,7 @@
 **Validation**:
 - `scope_focus`: array of integers (1, 2, 3); default: all scopes
 - `max_suggestions`: 1–10; default: 5
-- `priority`: one of `"cost_effective"`, `"high_impact"`, `"quick_wins"`
+- `priority`: one of `"cost_effective"`, `"high_impact"`
 - `budget_limit_gbp`: positive float (optional)
 
 **Prerequisites**:
@@ -47,6 +47,7 @@
       "estimated_cost_per_tonne": 500.0,
       "estimated_payback_years": 3.9,
       "confidence": "medium",
+      "confidence_notes": null,
       "target_scopes": [2],
       "target_source_ids": ["uuid-1"],
       "implementation_complexity": "medium",
@@ -56,9 +57,56 @@
         "Irish grid emission factor of 0.296 kgCO2/kWh",
         "500kW system producing ~450MWh/year",
         "25-year system lifespan"
+      ],
+      "activity_breakdown": null
+    },
+    {
+      "id": "uuid-2",
+      "name": "Fleet Electrification Programme",
+      "description": "Replace diesel fleet vehicles with electric alternatives across manufacturing and logistics",
+      "rationale": "Your Scope 1 fleet emissions across 3 activities represent 1,200 tCO2e. Electrification addresses multiple sites with a single programme.",
+      "estimated_capex_gbp": 450000.0,
+      "estimated_opex_annual_gbp": -85000.0,
+      "estimated_co2e_reduction_annual_tonnes": 900.0,
+      "estimated_cost_per_tonne": 500.0,
+      "estimated_payback_years": 5.3,
+      "confidence": "high",
+      "confidence_notes": null,
+      "target_scopes": [1],
+      "target_source_ids": ["uuid-3", "uuid-4", "uuid-5"],
+      "implementation_complexity": "high",
+      "typical_timeline_months": 18,
+      "relevance_score": 0.88,
+      "assumptions": [
+        "EV replacement ratio 1:1",
+        "Average annual mileage 25,000 km per vehicle"
+      ],
+      "activity_breakdown": [
+        {
+          "activity": "Company vehicles - diesel",
+          "target_source_ids": ["uuid-3"],
+          "estimated_capex_gbp": 200000.0,
+          "estimated_opex_annual_gbp": -40000.0,
+          "estimated_co2e_reduction_annual_tonnes": 450.0
+        },
+        {
+          "activity": "Delivery fleet - diesel",
+          "target_source_ids": ["uuid-4"],
+          "estimated_capex_gbp": 150000.0,
+          "estimated_opex_annual_gbp": -30000.0,
+          "estimated_co2e_reduction_annual_tonnes": 300.0
+        },
+        {
+          "activity": "Forklift fleet - LPG",
+          "target_source_ids": ["uuid-5"],
+          "estimated_capex_gbp": 100000.0,
+          "estimated_opex_annual_gbp": -15000.0,
+          "estimated_co2e_reduction_annual_tonnes": 150.0
+        }
       ]
     }
   ],
+  "constraints_relaxed": null,
   "context_used": {
     "industry_sector": "Manufacturing",
     "total_emissions_co2e": 15000.0,
@@ -68,6 +116,12 @@
   "created_at": "2025-01-15T10:30:00Z"
 }
 ```
+
+**Response Fields Notes**:
+- `confidence`: `"high"`, `"medium"`, or `"low"`. Low-confidence suggestions are returned when constraints had to be relaxed.
+- `confidence_notes`: `null` normally; a string explaining limitations when confidence is `"low"` (e.g., `"Budget constraint relaxed from £200k to £400k to find viable options"`)
+- `activity_breakdown`: `null` for single-activity suggestions; array of per-activity breakdowns for multi-activity programme suggestions. Each breakdown includes `activity`, `target_source_ids`, and per-activity cost/saving/abatement figures. On acceptance, each breakdown item becomes a separate initiative.
+- `constraints_relaxed`: `null` normally; object describing which constraints were relaxed at the response level (e.g., `{"budget_limit_gbp": {"original": 200000, "relaxed_to": 400000}, "reason": "No viable suggestions within original budget"}`).
 
 ---
 
@@ -112,7 +166,7 @@
 
 ## POST /api/v1/ai/suggestions/{suggestion_id}/accept
 
-**Description**: Accept an AI suggestion and convert it into an initiative.
+**Description**: Accept an AI suggestion and convert it into one or more initiatives. For single-activity suggestions, creates one initiative. For multi-activity suggestions (those with `activity_breakdown`), creates one initiative per activity breakdown item.
 
 **Request Body** (optional overrides):
 ```json
@@ -122,16 +176,40 @@
   "co2e_reduction_annual_tonnes": 340.0,
   "owner": "Energy Manager",
   "status": "idea",
-  "add_to_scenario_id": "uuid"
+  "add_to_scenario_ids": ["uuid"]
 }
 ```
 
-**Response 201**: Full initiative object (same as Initiatives API GET response).
+**Response 201** (single-activity):
+```json
+{
+  "initiatives": [
+    { "...full initiative object..." }
+  ],
+  "source_suggestion_id": "uuid",
+  "added_to_scenarios": ["uuid"]
+}
+```
+
+**Response 201** (multi-activity — one initiative per activity breakdown):
+```json
+{
+  "initiatives": [
+    { "...initiative for activity 1..." },
+    { "...initiative for activity 2..." },
+    { "...initiative for activity 3..." }
+  ],
+  "source_suggestion_id": "uuid",
+  "added_to_scenarios": ["uuid"]
+}
+```
 
 **Notes**:
-- Creates a new AbatementInitiative with `initiative_type: "ai_suggested"`
+- Creates AbatementInitiative(s) with `initiative_type: "ai_suggested"`
 - Links back to the AISuggestion via `source_suggestion_id`
-- Optionally adds to specified scenario
+- For multi-activity suggestions: per-activity cost/saving/abatement from `activity_breakdown` is used for each initiative; user overrides in the request body apply to the first activity only (or are ignored for multi-activity)
+- `add_to_scenario_ids`: optional array of scenario UUIDs to add the initiative(s) to. If omitted, initiatives are created in the global list only.
+- Replaces the previous `add_to_scenario_id` (singular) field with `add_to_scenario_ids` (plural) to support adding to multiple scenarios at once.
 
 ---
 

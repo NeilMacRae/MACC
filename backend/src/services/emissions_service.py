@@ -449,6 +449,18 @@ async def get_unit_detail(
             ]
             scopes = sorted({r.scope for r in filtered_records})
             src_kg = sum(r.co2e_kg for r in filtered_records)
+            
+            # Compute source-level quality: worst quality across all records
+            qualities = {r.quality for r in filtered_records if r.quality}
+            if "Missing" in qualities:
+                source_quality = "Missing"
+            elif "Estimated" in qualities:
+                source_quality = "Estimated"
+            elif "Actual" in qualities:
+                source_quality = "Actual"
+            else:
+                source_quality = None
+            
             sources.append(
                 SourceDetail(
                     id=src.id,
@@ -459,6 +471,7 @@ async def get_unit_detail(
                     answer_unit=src.answer_unit,
                     co2e_tonnes=_kg_to_tonnes(src_kg),
                     scopes=scopes,
+                    quality=source_quality,
                     records=[
                         RecordDetail(
                             id=r.id,

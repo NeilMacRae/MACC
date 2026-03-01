@@ -7,7 +7,6 @@ import {
   MACCPage,
   ScenariosPage,
   ContextPage,
-  SuggestionsPage,
   SettingsPage,
 } from './pages';
 
@@ -24,7 +23,6 @@ export default function App() {
           <Route path="/macc" element={<MACCPage />} />
           <Route path="/scenarios" element={<ScenariosPage />} />
           <Route path="/context" element={<ContextPage />} />
-          <Route path="/suggestions" element={<SuggestionsPage />} />
           <Route path="/settings" element={<SettingsPage />} />
 
           {/* Fallback */}

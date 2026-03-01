@@ -20,6 +20,7 @@ from src.api import emissions as emissions_router
 from src.api import initiatives as initiatives_router
 from src.api import context as context_router
 from src.api import scenarios as scenarios_router
+from src.api import suggestions as suggestions_router
 
 app = FastAPI(
     title="MACC Modelling API",
@@ -102,3 +103,4 @@ app.include_router(emissions_router.router, prefix="/api/v1")
 app.include_router(initiatives_router.router, prefix="/api/v1")
 app.include_router(context_router.router, prefix="/api/v1")
 app.include_router(scenarios_router.router, prefix="/api/v1")
+app.include_router(suggestions_router.router, prefix="/api/v1")
