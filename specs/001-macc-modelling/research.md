@@ -122,27 +122,61 @@ Well within the 60-second success criterion (SC-005).
 
 ---
 
-## R4: EcoOnline Integration
+## R3b: AI Suggestions UX Design Decisions
 
-### Decision: Dedicated API client with rate limiting, backoff, and fault isolation
+### Decision: Unified "New Initiative" flow on MACC page; priority modes; multi-activity splitting; low-confidence fallback
 
 ### Rationale
-Constitution Principle V (API Integration & Segmentation) mandates: rate limiting, exponential backoff, fault isolation, correlation ID logging, and reference-by-ID-only data boundaries.
+Keeping AI suggestions within the existing "New Initiative" entry point on the MACC page creates a unified experience — the user is always "adding initiatives", choosing whether they research them or the AI does. A separate AI Suggestions page was rejected as it fragments the workflow.
+
+### Key Decisions
+
+**1. Priority Mode Selection**
+- User chooses between "cost-focused" (optimise £/tCO₂e) and "highest-impact" (maximise total abatement) when requesting suggestions
+- Passed as `priority: cost_effective | high_impact` to the API
+- UI presents this as a clear binary choice before submission
+
+**2. Global-First Acceptance**
+- Accepted suggestions create global initiatives by default (not scenario-specific)
+- Optional follow-up to add to one or more scenarios during or after acceptance
+- Prevents friction of requiring scenario selection before the user is ready
+
+**3. Low-Confidence Fallback**
+- When constraints can't be fully satisfied, the system relaxes them and still returns results
+- Low-confidence suggestions are clearly flagged with: confidence level indicator, explanation of which constraints were relaxed
+- Users can review and discard unsuitable results — no empty-state dead end
+
+**4. Multi-Activity Programme Splitting**
+- AI may suggest programme-level ideas spanning multiple activities
+- On acceptance, these are broken into per-activity initiatives with valid per-activity cost/saving/abatement figures
+- Each resulting initiative targets a single activity (preserving the data model invariant)
+- User reviews the per-activity breakdown before final acceptance
+
+**5. No Separate Page**
+- No "AI Suggestions" entry in sidebar navigation
+- Constraint configuration lives on the Settings page
+- Suggestion request + review happens inline within the MACC page's "New Initiative" modal/flow
+
+---
+
+## R4: EcoOnline Integration
+
+### Decision: Stub-only client — no real integration in this project
+
+### Rationale
+The MACC application will not integrate with a real EcoOnline API in this project. The `ecoonline_client.py` module implements the expected API shape (rate limiting, backoff, fault isolation per Constitution Principle V) but returns sample/seed data rather than making real HTTP calls. This ensures the sync infrastructure is architecturally ready if real integration is needed later, without adding unnecessary complexity or external dependencies.
 
 ### Approach
-- **`ecoonline_client.py`**: async HTTP client (httpx) wrapping EcoOnline API calls
-- **Rate limiting**: `asyncio.Semaphore` for concurrent request limiting + token bucket for rate limiting
-- **Exponential backoff**: retry on 429/5xx with jitter
+- **`ecoonline_client.py`**: async client matching expected EcoOnline API shape, returning seed data
+- **Rate limiting**: `asyncio.Semaphore` for concurrent request limiting + token bucket (exercised against stub for testing)
 - **Fault isolation**: catch all integration errors; return cached/stale data with warnings instead of crashing
 - **Correlation IDs**: UUID per request flow, propagated in headers and logged
-- **Data mapping**: EcoOnline entities mapped to MACC's internal models at the integration boundary (no EcoOnline-specific types leak into the service layer)
+- **Data mapping**: entities mapped to MACC's internal models at the integration boundary (no external-specific types leak into the service layer)
 
 ### Assumptions
-- EcoOnline provides REST endpoints for:
-  - `GET /api/organisations/{id}/hierarchy` — org tree
-  - `GET /api/assessments/{id}/results` — emissions data
-- Authentication via existing org credentials (JWT forwarded or API key)
-- Rate limits TBD — implement conservative defaults (10 req/s, 5 concurrent)
+- Real EcoOnline API is not available for this project
+- Stub client returns realistic sample data matching expected response shapes
+- Architecture is ready to swap stub for real client by changing configuration
 
 ---
 
@@ -188,7 +222,8 @@ Based on EcoOnline screenshots:
 | Migration approach | Alembic batch mode for SQLite |
 | AI suggestion API | OpenAI Structured Outputs via Responses API |
 | AI response parsing | Pydantic schemas + business rule validator |
-| EcoOnline integration | Dedicated async client with rate limiting + fault isolation |
+| AI suggestions UX | Unified "New Initiative" flow on MACC page; priority modes; multi-activity splitting; low-confidence fallback |
+| EcoOnline integration | Stub-only client returning sample data (no real integration) |
 | Frontend state | TanStack Query for server state |
 | Design system | Custom components matching EcoOnline patterns |
 | Export approach | Client-side CSV + SVG-to-PNG; server-side for complex reports |

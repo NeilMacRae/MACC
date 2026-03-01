@@ -1,9 +1,11 @@
 // ─── EmissionsOverview ────────────────────────────────────────────────────────
+import { useState } from 'react';
 import type { MarketFactorType } from '../../types/emissions';
 import { useEmissionsOverview } from '../../hooks/useEmissions';
 import { ScopeBarChart } from './ScopeBarChart';
 import { LoadingSpinner } from '../layout/LoadingSpinner';
 import { Badge } from '../common/Badge';
+import type { QualityLevel } from '../common/QualityBadge';
 
 interface EmissionsOverviewProps {
   year?: number;
@@ -17,6 +19,7 @@ function fmt(n: number) {
 }
 
 export function EmissionsOverview({ year, mft, onYearChange, onMftChange }: EmissionsOverviewProps) {
+  const [qualityFilter, setQualityFilter] = useState<QualityLevel | 'all'>('all');
   const { data, isLoading, error } = useEmissionsOverview(year, mft);
 
   if (isLoading) return <div className="flex justify-center py-20"><LoadingSpinner size="lg" label="Loading emissions…" /></div>;
@@ -33,6 +36,17 @@ export function EmissionsOverview({ year, mft, onYearChange, onMftChange }: Emis
           <p className="text-sm text-gray-500">{data.organisation_name} · {data.year}</p>
         </div>
         <div className="flex items-center gap-3">
+          {/* Quality filter */}
+          <select
+            value={qualityFilter}
+            onChange={(e) => setQualityFilter(e.target.value as QualityLevel | 'all')}
+            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="all">All quality</option>
+            <option value="Actual">Actual only</option>
+            <option value="Estimated">Estimated only</option>
+            <option value="Missing">Missing only</option>
+          </select>
           {/* Year selector */}
           <select
             value={year ?? data.year}

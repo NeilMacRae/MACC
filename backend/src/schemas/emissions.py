@@ -107,6 +107,7 @@ class SourceDetail(BaseModel):
     answer_unit: str
     co2e_tonnes: float
     scopes: list[int]
+    quality: str | None = None
     records: list[RecordDetail]
 
 

@@ -21,6 +21,11 @@
 - Q: Should lifespan_years be required for the lifecycle cost formula? → A: Required with default of 10 years (editable by user).
 - Q: Should co2e_reduction_tonnes represent annual or total reduction? → A: Annual. Field renamed to co2e_reduction_annual_tonnes for clarity. UI label: "Annual CO₂e reduction (tonnes/year)".
 - Q: Should payback_years be a user input or computed? → A: Computed from capex / |opex_annual| when OpEx is negative (saving); displayed as N/A when OpEx ≥ 0. Not a user input.
+ - Q: When requesting AI suggestions, should the system assume a default intent or ask the user? → A: Ask the user to choose between cost-focused and impact-focused modes in the suggestion request flow.
+ - Q: When accepting an AI suggestion, should it automatically be added to a scenario by default? → A: No. Accepted AI suggestions create global initiatives by default; adding to scenarios is an optional follow-up action.
+ - Q: What should happen if the AI cannot find any suggestions that fully satisfy current data and constraints? → A: Softly relax constraints and still return low-confidence suggestions, clearly flagging their confidence/limitations so users can discard them if unsuitable.
+ - Q: Can AI suggestions represent multi-activity programmes, and if so how should they map to initiatives? → A: Yes, but accepted suggestions must be broken down into per-activity initiatives with valid, per-activity cost/saving and emissions abatement figures.
+ - Q: Where should AI suggestions live in the UI — as a separate page or within the initiative creation flow? → A: Within the "New Initiative" flow on the MACC page. When the user clicks "New Initiative", they choose between creating one manually or asking the AI agent to suggest initiatives. This keeps the experience unified: the user is always "adding initiatives", just choosing whether they do the research themselves or the agent does it for them. There is no separate AI Suggestions page in the sidebar.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -88,7 +93,9 @@ This includes capturing the organisation's industry classification, operating ge
 
 As a sustainability expert, I want an AI agent to suggest abatement initiatives based on my organisation's emissions profile, industry, and geography so that I can discover reduction opportunities I may not have considered.
 
-The agent analyses the organisation's emissions sources, industry context, and geographic factors to propose relevant, actionable abatement initiatives with estimated costs and reduction potentials. The user can review, accept, modify, or reject each suggestion.
+The AI suggestions feature is accessed from the same "New Initiative" button on the MACC page that is used to create manual initiatives. When the user clicks this button, they choose between filling in the initiative form themselves (manual) or asking the AI agent to generate suggestions. This keeps the experience unified: the user is always "adding initiatives to the MACC", and the only difference is whether they provide their own research or let the agent do it. There is no separate AI Suggestions page in the sidebar navigation.
+
+When requesting suggestions, the user explicitly chooses whether the agent should focus on cost-effective opportunities or highest-impact reductions regardless of cost, and this choice is passed as the suggestion priority. The agent analyses the organisation's emissions sources, industry context, and geographic factors to propose relevant, actionable abatement initiatives with estimated costs and reduction potentials. Accepted AI suggestions become standard initiatives in the global initiative list by default, with the option (but not the requirement) to add them to specific scenarios during or after acceptance. When a suggestion conceptually spans multiple activities, the system requires a valid per-activity breakdown of costs/savings and annual abatement and, on acceptance, creates separate concrete initiatives per activity (and associated company units) so that each initiative still targets a single activity. The user can review, accept, modify, or reject each suggestion.
 
 **Why this priority**: This is the differentiating AI feature but depends on emissions data (P1), initiative modelling (P2), and organisational context (P3) being in place first.
 
@@ -96,12 +103,17 @@ The agent analyses the organisation's emissions sources, industry context, and g
 
 **Acceptance Scenarios**:
 
-1. **Given** the user has loaded emissions data and completed their organisational context, **When** they request AI suggestions, **Then** the agent returns a list of relevant abatement initiatives with estimated costs and reduction potentials
+1. **Given** the user has loaded emissions data and completed their organisational context, **When** they click "New Initiative" on the MACC page and choose the AI suggestion option, **Then** the agent returns a list of relevant abatement initiatives with estimated costs and reduction potentials
 2. **Given** the agent has suggested initiatives, **When** the user reviews a suggestion, **Then** they see a rationale explaining why this initiative is relevant to their organisation
 3. **Given** the agent has suggested an initiative, **When** the user accepts it, **Then** it is added to their MACC chart alongside manually defined initiatives
 4. **Given** the agent has suggested an initiative, **When** the user modifies it (adjusting cost or reduction estimates), **Then** the modified version is added to their initiatives
 5. **Given** the agent has suggested an initiative, **When** the user rejects it, **Then** it is removed from the suggestions list and not included in the MACC chart
 6. **Given** the user has accepted some AI suggestions, **When** they view the MACC chart, **Then** AI-suggested initiatives are visually distinguishable from manually created ones
+7. **Given** the user opens the AI suggestions request form, **When** they choose between a cost-focused mode and a highest-impact mode and submit the request, **Then** the returned suggestions clearly reflect that chosen priority (e.g., cost-focused suggestions emphasise low cost per tonne; impact-focused suggestions emphasise larger abatement volumes even at higher cost)
+8. **Given** the agent has suggested initiatives, **When** the user accepts a suggestion without selecting any scenario, **Then** the resulting initiative is created in the global initiative list only and remains available to be added to scenarios later
+9. **Given** the agent has suggested initiatives, **When** the user accepts a suggestion and chooses one or more scenarios to add it to, **Then** the initiative is created in the global initiative list and also associated with each selected scenario so that it appears in those scenarios' MACC views and metrics
+10. **Given** the AI cannot find any initiatives that fully satisfy the user's configured constraints or available data, **When** the user requests suggestions, **Then** the system still returns a small number of clearly flagged low-confidence suggestions, along with an explanation of which assumptions or constraints were relaxed so the user can decide whether to act on or discard them
+11. **Given** the agent has suggested a programme-level idea that conceptually spans multiple activities, **When** the user accepts that suggestion, **Then** the system either (a) presents a per-activity breakdown of costs/savings and annual abatement for the user to review, or (b) automatically creates separate initiatives per activity with clearly visible per-activity figures, so that each resulting initiative continues to target a single activity while preserving the overall intent of the suggestion
 
 ---
 
@@ -239,6 +251,7 @@ I can export data and visualisations in common formats suitable for presentation
 - What happens when the core application API is unavailable? The system falls back to previously loaded data with a notification that data may be stale, and displays the last successful sync timestamp.
 - What happens when an initiative's target emission source is removed from the loaded data on refresh? The initiative is flagged as orphaned, and the user is prompted to re-map it to a valid source or archive it.
 - What happens when the AI agent cannot generate suggestions due to insufficient context? The system informs the user which specific context fields need to be completed before suggestions can be generated.
+ - What happens when the AI cannot find any initiatives that fully satisfy configured constraints? The system gradually relaxes constraints in a controlled way, returns a small set of clearly flagged low-confidence suggestions, and explains which constraints were relaxed so users can decide whether to act on or discard them.
 - What happens when two initiatives target the same emission source and their combined reduction exceeds the source's total emissions? The system shows a yellow warning banner (non-blocking) about the over-abatement and highlights the overlap on the MACC chart. The user is not prevented from saving, as the source data may be incomplete or incorrect.
 - How does the system handle negative-cost initiatives (initiatives that save money)? These appear below the x-axis on the MACC chart, indicating they are cost-saving measures.
 - What happens when emissions data changes between assessment periods? The system maintains a clear distinction between periods and does not mix data from different reporting years.
@@ -261,17 +274,19 @@ I can export data and visualisations in common formats suitable for presentation
 - **FR-010**: System MUST allow users to edit and delete abatement initiatives with immediate chart updates
 - **FR-011**: System MUST capture organisational context including: industry classification, operating geographies, organisation size, and sustainability targets
 - **FR-012**: System MUST persist all user-entered data (initiatives, organisational context) locally
-- **FR-013**: System MUST provide AI-generated abatement initiative suggestions based on the organisation's emissions profile, industry, geography, and emission sources
+- **FR-013**: System MUST provide AI-generated abatement initiative suggestions, accessed via the "New Initiative" flow on the MACC page rather than a separate page. The user chooses between a cost-focused mode and a highest-impact mode before requesting suggestions. Suggestions are based on the organisation's emissions profile, industry, geography, and emission sources.
 - **FR-014**: System MUST display a rationale for each AI-suggested initiative explaining its relevance
-- **FR-015**: System MUST allow users to accept, modify, or reject AI-suggested initiatives
+- **FR-015**: System MUST allow users to accept, modify, or reject AI-suggested initiatives. Accepted suggestions create global initiatives by default; adding to scenarios is optional.
 - **FR-016**: System MUST visually distinguish AI-suggested initiatives from manually created ones on the MACC chart
+- **FR-017**: When the AI cannot generate suggestions that fully satisfy configured constraints or available data, the system MUST still return a small number of clearly flagged low-confidence suggestions, explaining which constraints were relaxed, so users can decide whether to act on or discard them
+- **FR-027**: When an AI suggestion conceptually spans multiple activities, the system MUST require a valid per-activity breakdown of costs/savings and annual abatement, and on acceptance MUST create separate initiatives per activity so that each initiative targets a single activity
 - **FR-018**: System MUST show a yellow warning banner (non-blocking) when an initiative's reduction exceeds the total emissions for its selected sources, or when combined initiative reductions exceed a source's total emissions. The warning does not prevent submission.
 - **FR-019**: System MUST support data refresh from the core application with incremental updates
 - **FR-020**: System MUST allow configuration of organisational emissions reduction targets and compute projected emissions trajectories based on selected initiatives
 - **FR-021**: System MUST indicate, for each target year, whether the current set of initiatives and scenarios achieves, exceeds, or falls short of configured targets and by what margin
 - **FR-022**: System MUST allow initiatives to have lifecycle metadata including status, owner, and key milestone dates, and enable filtering by these fields
 - **FR-023**: System MUST support creation and management of named scenarios comprising selected initiatives, and compute aggregate metrics (total reduction, total cost, cost per tonne, target alignment) per scenario
-- **FR-024**: System MUST allow configuration of constraints and preferences for AI suggestions (e.g., budget limits, excluded initiative types, excluded facilities/scopes) and enforce these when generating suggestions
+- **FR-024**: System MUST allow configuration of constraints and preferences for AI suggestions (e.g., budget limits, excluded initiative types, excluded facilities/scopes) and enforce these when generating suggestions. When no suggestions fully satisfy constraints, the system softly relaxes them and clearly flags the deviation (see FR-017).
 - **FR-025**: System MUST represent and surface data quality or confidence levels for emissions data and initiative assumptions, and allow filtering based on these levels
 - **FR-026**: System MUST provide export capabilities for MACC charts, initiative tables, and scenario comparisons into commonly used formats suitable for reporting and further analysis
 

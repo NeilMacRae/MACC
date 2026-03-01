@@ -94,6 +94,7 @@ export interface SourceDetail {
   answer_unit: string;
   co2e_tonnes: number;
   scopes: number[];
+  quality?: 'Actual' | 'Estimated' | 'Missing';
   records: RecordDetail[];
 }
 

@@ -306,12 +306,15 @@ Audit log of AI suggestion requests.
 |-------|------|-------------|-------------|
 | id | UUID (string) | PK | Unique identifier |
 | organisation_id | UUID (string) | FK → Organisation.id, NOT NULL | Parent organisation |
+| scope_focus | JSON | nullable | Array of scope integers requested (e.g., [1, 2]); null = all scopes |
+| priority | string(20) | NOT NULL, CHECK("cost_effective", "high_impact") | User-chosen suggestion priority mode |
 | input_hash | string(64) | NOT NULL | SHA-256 of input data (for caching) |
 | model_used | string(50) | NOT NULL | AI model identifier |
 | input_token_count | integer | nullable | Tokens consumed (input) |
 | output_token_count | integer | nullable | Tokens consumed (output) |
 | latency_ms | integer | nullable | Response time in milliseconds |
 | status | string(20) | NOT NULL | "success", "error", "refused" |
+| constraints_relaxed | JSON | nullable | Object describing which constraints were relaxed to generate results (null if none) |
 | error_message | text | nullable | Error details if failed |
 | created_at | datetime | NOT NULL, default now | Request timestamp |
 
@@ -327,12 +330,17 @@ A single AI-generated suggestion (cached response).
 |-------|------|-------------|-------------|
 | id | UUID (string) | PK | Unique identifier |
 | request_id | UUID (string) | FK → AISuggestionRequest.id, NOT NULL | Parent request |
-| suggestion_data | JSON | NOT NULL | Full suggestion payload |
+| suggestion_data | JSON | NOT NULL | Full suggestion payload (name, rationale, estimates, assumptions) |
+| confidence | string(20) | NOT NULL, CHECK("low", "medium", "high") | AI confidence in this suggestion |
+| confidence_notes | text | nullable | Explanation when confidence is low (e.g., which constraints were relaxed) |
+| activity_breakdown | JSON | nullable | Per-activity breakdown for multi-activity suggestions; null for single-activity |
 | accepted | boolean | nullable | User accepted/rejected (null = pending) |
-| initiative_id | UUID (string) | FK → AbatementInitiative.id, nullable | Created initiative if accepted |
+| dismiss_reason | text | nullable | User-provided reason for dismissal (used for future deprioritisation) |
 | created_at | datetime | NOT NULL, default now | Record creation timestamp |
 
-**Relationships**: belongs to AISuggestionRequest, optionally links to AbatementInitiative
+**Relationships**: belongs to AISuggestionRequest, optionally links to one or more AbatementInitiatives (via `source_suggestion_id` FK on AbatementInitiative)
+
+**Note**: For multi-activity suggestions, acceptance creates multiple AbatementInitiative rows (one per activity breakdown item), all referencing this AISuggestion via `source_suggestion_id`.
 
 ---
 

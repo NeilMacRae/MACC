@@ -1,16 +1,26 @@
 <!--
 === Sync Impact Report ===
-Version change: 1.1.0 → 1.1.1
+Version change: 1.1.1 → 1.2.0
 Modified principles: None
 Added sections:
-  - Clarifications (Session 2026-02-28 with 5 Q&A entries)
+  - Principle VI: AI Model Configuration (MANDATORY: claude-sonnet-4-6 only)
+  - Clarification: Claude model specification added to Session 2026-02-28
 Removed sections: None
-Technology Stack updates:
-  - Added: SQLite database, JWT authentication, EcoOnline design system
-  - Added: Local deployment (uvicorn + Vite), GitHub Actions CI/CD
+Technology Stack updates: None (AI model enforcement is principle-level)
 Templates requiring updates:
-  - .specify/templates/plan-template.md ✅ (Technical Context now complete)
-Follow-up TODOs: None
+  - .specify/templates/plan-template.md ✅ (no AI-specific guidance required)
+  - .specify/templates/spec-template.md ✅ (no AI-specific guidance required)
+  - .specify/templates/tasks-template.md ✅ (no AI-specific guidance required)
+  - backend/src/integrations/openai_client.py ✅ UPDATED (ANTHROPIC_MODEL default set to "claude-sonnet-4-6" with validation)
+  - backend/.env ✅ VERIFIED (ANTHROPIC_MODEL already set to "claude-sonnet-4-6")
+Follow-up TODOs:
+  - Backend restart required to load new model validation logic
+  - Consider adding model validation tests to ensure compliance
+  - Document model change rationale in research.md or relevant spec docs (if needed)
+Rationale for MINOR version bump:
+  - New principle (VI) added establishing AI model governance
+  - Material guidance expansion: explicit model pinning requirement
+  - No backward-incompatible changes (existing code can be updated to comply)
 -->
 
 # MACC Constitution
@@ -104,6 +114,19 @@ MACC operates as an isolated service with controlled integration points:
 
 **Rationale**: Segmented AI-driven development reduces blast radius of changes, enables independent deployment, and maintains clear ownership boundaries.
 
+### VI. AI Model Configuration
+
+All AI/LLM integrations MUST use standardized, tested model configurations:
+
+- **Model Pin**: The ONLY valid Claude model is `claude-sonnet-4` (versioned as `claude-sonnet-4-6` in code); no other models are permitted
+- **No Model Variance**: Code, documentation, tests, and environment configurations MUST all reference the same pinned model; inconsistencies are prohibited
+- **Explicit Configuration**: Model identifiers MUST be explicitly set in code defaults and environment variables; implicit defaults are not allowed
+- **Version Stability**: Model version changes require constitution amendment and full regression testing before deployment
+- **Error Handling**: Model availability errors MUST fail fast with clear error messages indicating the required model
+- **Documentation**: All AI integration documentation MUST specify the exact model identifier and reasoning for the choice
+
+**Rationale**: Model specification inconsistencies caused significant debugging issues for development agents. A single, enforced model standard eliminates configuration drift and ensures reproducible AI behavior across all environments.
+
 ## Clarifications
 
 ### Session 2026-02-28
@@ -113,6 +136,7 @@ MACC operates as an isolated service with controlled integration points:
 - Q: What design system should the React frontend use? → A: Match existing application (EcoOnline design patterns)
 - Q: What deployment environment should MACC use? → A: Local development (uvicorn + Vite dev servers)
 - Q: Which CI/CD platform should be used? → A: GitHub Actions
+- Q: What Claude model should be used for AI features? → A: `claude-sonnet-4` (versioned as `claude-sonnet-4-6`) - no other models permitted
 
 ## Quality Gates
 
@@ -176,4 +200,4 @@ This constitution is the authoritative source for development standards in MACC.
   - MINOR: New principles added or material guidance expansion
   - PATCH: Clarifications, typo fixes, non-semantic refinements
 
-**Version**: 1.1.1 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
+**Version**: 1.2.0 | **Ratified**: 2026-02-28 | **Last Amended**: 2026-02-28
