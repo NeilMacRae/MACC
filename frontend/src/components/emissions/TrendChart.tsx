@@ -21,7 +21,7 @@ export function TrendChart({ unitId, mft }: TrendChartProps) {
 
   if (isLoading) return <div className="flex justify-center py-16"><LoadingSpinner label="Loading trends…" /></div>;
   if (error || !data || data.trends.length === 0) {
-    return <div className="p-8 text-center text-sm text-gray-400">No trend data available.</div>;
+    return <div className="p-8 text-center text-sm text-gray-600">No trend data available.</div>;
   }
 
   const W = 560, H = 220, ml = 56, mr = 24, mt = 16, mb = 36;
@@ -57,12 +57,12 @@ export function TrendChart({ unitId, mft }: TrendChartProps) {
   const yTicks = y.ticks(5);
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-5">
+    <div data-prism="card" className="rounded-lg border border-gray-200 bg-white p-5">
       <div className="mb-3 flex items-center justify-between">
         <h3 className="text-sm font-semibold text-gray-700">
           Emissions Trend — {data.company_unit_name}
         </h3>
-        <span className="text-xs text-gray-400">{mft} factors · tCO₂e / year</span>
+        <span className="text-xs text-gray-600">{mft} factors · tCO₂e / year</span>
       </div>
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" aria-label="Emissions trend chart">
         <g transform={`translate(${ml},${mt})`}>

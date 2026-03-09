@@ -50,6 +50,9 @@ class Organisation(Base):
     scenarios: Mapped[list[Any]] = relationship(  # type: ignore[assignment]
         "Scenario", back_populates="organisation", cascade="all, delete-orphan"
     )
+    targets: Mapped[list[Any]] = relationship(  # type: ignore[assignment]
+        "EmissionTarget", cascade="all, delete-orphan"
+    )
     sync_logs: Mapped[list[Any]] = relationship(  # type: ignore[assignment]
         "SyncLog", back_populates="organisation", cascade="all, delete-orphan"
     )

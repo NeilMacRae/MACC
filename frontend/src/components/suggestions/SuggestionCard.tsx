@@ -6,6 +6,8 @@
  */
 
 import type { SuggestionDetail } from "../../types/suggestions";
+import { Button } from "../common/Button";
+import { Badge, type BadgeVariant } from "../common/Badge";
 
 interface SuggestionCardProps {
   suggestion: SuggestionDetail;
@@ -29,11 +31,13 @@ export function SuggestionCard({
     });
   }
 
-  const confidenceColor = {
-    high: "bg-green-100 text-green-800 border-green-200",
-    medium: "bg-amber-100 text-amber-800 border-amber-200",
-    low: "bg-red-100 text-red-800 border-red-200",
-  }[suggestion.confidence];
+  const CONFIDENCE_VARIANT: Record<"high" | "medium" | "low", BadgeVariant> = {
+    high: "success",
+    medium: "warning",
+    low: "danger",
+  };
+
+  const confidenceVariant = CONFIDENCE_VARIANT[suggestion.confidence];
 
   const complexityColor = {
     low: "text-green-600",
@@ -50,9 +54,9 @@ export function SuggestionCard({
             {suggestion.name}
           </h3>
           <div className="flex items-center gap-2 mt-2">
-            <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${confidenceColor}`}>
+            <Badge variant={confidenceVariant}>
               {suggestion.confidence.charAt(0).toUpperCase() + suggestion.confidence.slice(1)} Confidence
-            </span>
+            </Badge>
             <span className="text-xs text-gray-400">·</span>
             <span className="text-xs text-gray-600">
               Relevance: <span className="font-medium">{Math.round(suggestion.relevance_score * 100)}%</span>
@@ -169,27 +173,28 @@ export function SuggestionCard({
 
       {/* Action buttons */}
       <div className="flex gap-2 pt-2">
-        <button
+        <Button
+          className="flex-1"
           onClick={() => onAccept(suggestion.id)}
           disabled={disabled}
-          className="flex-1 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Accept
-        </button>
-        <button
+        </Button>
+        <Button
+          className="flex-1"
+          variant="secondary"
           onClick={() => onModifyAndAccept(suggestion.id)}
           disabled={disabled}
-          className="flex-1 rounded-lg border border-blue-600 bg-white px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          Modify & Accept
-        </button>
-        <button
+          Modify &amp; Accept
+        </Button>
+        <Button
+          variant="ghost"
           onClick={() => onDismiss(suggestion.id)}
           disabled={disabled}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Dismiss
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -6,6 +6,8 @@
  */
 
 import { useState } from "react";
+import { PrismTextarea } from "../../prism";
+import { Button } from "../common/Button";
 import { useUpdateStatus } from "../../hooks/useInitiatives";
 import type { Initiative, InitiativeStatus } from "../../types/initiatives";
 import { STATUS_TRANSITIONS } from "../../types/initiatives";
@@ -31,14 +33,6 @@ const STATUS_COLOURS: Record<InitiativeStatus, string> = {
   in_progress: "bg-amber-100 text-amber-700",
   completed: "bg-emerald-100 text-emerald-700",
   rejected: "bg-red-100 text-red-600",
-};
-
-const NEXT_BUTTON_COLOURS: Record<string, string> = {
-  planned: "border-blue-400 text-blue-700 hover:bg-blue-50",
-  approved: "border-indigo-400 text-indigo-700 hover:bg-indigo-50",
-  in_progress: "border-amber-400 text-amber-700 hover:bg-amber-50",
-  completed: "border-emerald-400 text-emerald-700 hover:bg-emerald-50",
-  rejected: "border-red-400 text-red-600 hover:bg-red-50",
 };
 
 export function StatusTransition({ initiative, onTransitioned }: Props) {
@@ -74,7 +68,7 @@ export function StatusTransition({ initiative, onTransitioned }: Props) {
           {STATUS_LABELS[initiative.status]}
         </span>
         {nextStatuses.length === 0 && (
-          <span className="text-xs text-gray-400">(terminal state)</span>
+          <span className="text-xs text-gray-600">(terminal state)</span>
         )}
       </div>
 
@@ -82,8 +76,12 @@ export function StatusTransition({ initiative, onTransitioned }: Props) {
       {nextStatuses.length > 0 && !confirmReject && (
         <div className="flex flex-wrap gap-2">
           {nextStatuses.map((next) => (
-            <button
+            <Button
               key={next}
+              type="button"
+              variant={next === "rejected" ? "danger" : "secondary"}
+              size="sm"
+              disabled={mutation.isPending}
               onClick={() => {
                 if (next === "rejected") {
                   setConfirmReject(true);
@@ -91,11 +89,9 @@ export function StatusTransition({ initiative, onTransitioned }: Props) {
                   transition(next);
                 }
               }}
-              disabled={mutation.isPending}
-              className={`rounded-md border px-3 py-1 text-xs font-medium transition-colors disabled:opacity-50 ${NEXT_BUTTON_COLOURS[next] ?? "border-gray-300 text-gray-600 hover:bg-gray-50"}`}
             >
               → {STATUS_LABELS[next]}
-            </button>
+            </Button>
           ))}
         </div>
       )}
@@ -106,30 +102,34 @@ export function StatusTransition({ initiative, onTransitioned }: Props) {
           <p className="text-xs font-medium text-red-700">
             Confirm rejection?
           </p>
-          <textarea
-            className="w-full rounded border border-red-300 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-red-400"
+          <PrismTextarea
             rows={2}
             placeholder="Reason for rejection (optional)"
             value={rejectReason}
-            onChange={(e) => setRejectReason(e.target.value)}
+            onInput={(e) => setRejectReason((e.target as HTMLTextAreaElement).value)}
           />
           <div className="flex gap-2">
-            <button
-              onClick={() => transition("rejected", rejectReason)}
+            <Button
+              type="button"
+              variant="danger"
+              size="sm"
               disabled={mutation.isPending}
-              className="rounded px-3 py-1 text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50"
+              loading={mutation.isPending}
+              onClick={() => transition("rejected", rejectReason)}
             >
               {mutation.isPending ? "Rejecting…" : "Reject"}
-            </button>
-            <button
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
               onClick={() => {
                 setConfirmReject(false);
                 setRejectReason("");
               }}
-              className="rounded px-3 py-1 text-xs font-medium border border-gray-300 text-gray-600 hover:bg-gray-50"
             >
               Cancel
-            </button>
+            </Button>
           </div>
         </div>
       )}

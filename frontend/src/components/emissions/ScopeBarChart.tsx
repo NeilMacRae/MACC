@@ -33,6 +33,7 @@ export function ScopeBarChart({ by_scope }: ScopeChartProps) {
     .padding(0.35);
 
   return (
+    <div data-prism="chart" className="overflow-hidden">
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full" aria-label="Scope emissions breakdown">
       <g transform={`translate(${ml},${mt})`}>
         {data.map((d) => (
@@ -70,6 +71,5 @@ export function ScopeBarChart({ by_scope }: ScopeChartProps) {
           </text>
         ))}
       </g>
-    </svg>
-  );
+    </svg>    </div>  );
 }

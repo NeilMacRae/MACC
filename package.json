@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@ecoonline/prism-web-components-react": "^1.0.57"
+  }
+}

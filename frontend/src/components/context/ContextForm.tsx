@@ -6,7 +6,16 @@
  */
 
 import { useState, useEffect } from "react";
+import {
+  PrismAlert,
+  PrismInput,
+  PrismSelect,
+  PrismOption,
+  PrismTag,
+  PrismTextarea,
+} from "../../prism";
 import type { OrgContext, OrgContextUpsert, SustainabilityMaturity } from "../../types/scenarios";
+import { Button } from '../common/Button';
 
 interface ContextFormProps {
   initial: OrgContext | null;
@@ -128,180 +137,140 @@ export function ContextForm({ initial, onSave, isSaving }: ContextFormProps) {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 border border-red-200">
+        <PrismAlert variant="danger" title="Unable to save">
           {error}
-        </div>
+        </PrismAlert>
       )}
 
       {/* Row 1: sector + maturity */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Industry sector
-          </label>
-          <input
-            type="text"
-            value={industrySector}
-            onChange={(e) => setIndustrySector(e.target.value)}
-            placeholder="e.g. Manufacturing"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sustainability maturity
-          </label>
-          <select
-            value={maturity}
-            onChange={(e) => setMaturity(e.target.value as SustainabilityMaturity | "")}
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          >
-            <option value="">— Select —</option>
-            {MATURITY_OPTIONS.map((o) => (
-              <option key={o.value} value={o.value}>
-                {o.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        <PrismInput
+          type="text"
+          label="Industry sector"
+          value={industrySector}
+          onInput={(e) => setIndustrySector(String((e.target as any).value ?? ""))}
+          placeholder="e.g. Manufacturing"
+        />
+        <PrismSelect
+          label="Sustainability maturity"
+          value={maturity}
+          onChange={(e) =>
+            setMaturity(String((e.target as any).value ?? "") as SustainabilityMaturity | "")
+          }
+        >
+          <PrismOption value="">— Select —</PrismOption>
+          {MATURITY_OPTIONS.map((o) => (
+            <PrismOption key={o.value} value={o.value}>
+              {o.label}
+            </PrismOption>
+          ))}
+        </PrismSelect>
       </div>
 
       {/* Row 2: employee count + target year */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Employee count
-          </label>
-          <input
-            type="number"
-            min={1}
-            value={employeeCount}
-            onChange={(e) => setEmployeeCount(e.target.value)}
-            placeholder="e.g. 2500"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Net-zero target year
-          </label>
-          <input
-            type="number"
-            min={2024}
-            max={2100}
-            value={targetYear}
-            onChange={(e) => setTargetYear(e.target.value)}
-            placeholder="e.g. 2030"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <PrismInput
+          type="number"
+          label="Employee count"
+          min={1}
+          value={employeeCount}
+          onInput={(e) => setEmployeeCount(String((e.target as any).value ?? ""))}
+          placeholder="e.g. 2500"
+        />
+        <PrismInput
+          type="number"
+          label="Net-zero target year"
+          min={2024}
+          max={2100}
+          value={targetYear}
+          onInput={(e) => setTargetYear(String((e.target as any).value ?? ""))}
+          placeholder="e.g. 2030"
+        />
       </div>
 
       {/* Row 3: revenue + budget */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Annual revenue (£)
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={annualRevenue}
-            onChange={(e) => setAnnualRevenue(e.target.value)}
-            placeholder="e.g. 150000000"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Sustainability budget constraint (£)
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="any"
-            value={budgetConstraint}
-            onChange={(e) => setBudgetConstraint(e.target.value)}
-            placeholder="e.g. 500000"
-            className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-          />
-        </div>
+        <PrismInput
+          type="number"
+          label="Annual revenue (£)"
+          min={0}
+          step="any"
+          value={annualRevenue}
+          onInput={(e) => setAnnualRevenue(String((e.target as any).value ?? ""))}
+          placeholder="e.g. 150000000"
+        />
+        <PrismInput
+          type="number"
+          label="Sustainability budget constraint (£)"
+          min={0}
+          step="any"
+          value={budgetConstraint}
+          onInput={(e) => setBudgetConstraint(String((e.target as any).value ?? ""))}
+          placeholder="e.g. 500000"
+        />
       </div>
 
       {/* Operating geographies tag input */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Operating geographies{" "}
-          <span className="text-gray-400 font-normal">({geographies.length}/50)</span>
-        </label>
         <div className="flex gap-2 mb-2">
-          <input
+          <PrismInput
             type="text"
+            label="Operating geographies"
+            helpText={`${geographies.length}/50`}
             value={geoInput}
-            onChange={(e) => setGeoInput(e.target.value)}
-            onKeyDown={(e) => {
+            onInput={(e) => setGeoInput(String((e.target as any).value ?? ""))}
+            onKeyDown={(e: React.KeyboardEvent) => {
               if (e.key === "Enter" || e.key === ",") {
                 e.preventDefault();
                 addGeo();
               }
             }}
             placeholder="Type a country/region and press Enter"
-            className="flex-1 rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
           />
-          <button
-            type="button"
-            onClick={addGeo}
-            className="rounded-md bg-gray-100 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-200"
-          >
+          <Button type="button" variant="secondary" size="sm" onClick={addGeo}>
             Add
-          </button>
+          </Button>
         </div>
         {geographies.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {geographies.map((g) => (
-              <span
-                key={g}
-                className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-700"
-              >
-                {g}
-                <button
+              <div key={g} className="flex items-center gap-1">
+                <PrismTag variant="neutral" size="small" title={g}>
+                  {g}
+                </PrismTag>
+                <Button
                   type="button"
+                  variant="ghost"
+                  size="sm"
                   onClick={() => removeGeo(g)}
-                  className="text-blue-500 hover:text-blue-700 leading-none"
                   aria-label={`Remove ${g}`}
                 >
                   ×
-                </button>
-              </span>
+                </Button>
+              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Notes */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Notes
-        </label>
-        <textarea
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-          placeholder="Strategic context, priorities, constraints…"
-          className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-        />
-      </div>
+      <PrismTextarea
+        label="Notes"
+        value={notes}
+        onInput={(e) => setNotes(String((e.target as any).value ?? ""))}
+        rows={3}
+        placeholder="Strategic context, priorities, constraints…"
+      />
 
       {/* Submit */}
       <div className="flex justify-end">
-        <button
+        <Button
           type="submit"
           disabled={isSaving}
-          className="rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:opacity-50"
+          loading={isSaving}
         >
           {isSaving ? "Saving…" : "Save context"}
-        </button>
+        </Button>
       </div>
     </form>
   );

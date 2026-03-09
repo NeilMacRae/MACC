@@ -6,6 +6,12 @@
  */
 
 import { useState } from "react";
+import {
+  PrismInput,
+  PrismTextarea,
+} from "../../prism";
+import { Button } from "../common/Button";
+import { LoadingSpinner } from "../layout/LoadingSpinner";
 import type { Priority, SuggestionRequest as RequestParams } from "../../types/suggestions";
 
 interface SuggestionRequestProps {
@@ -62,34 +68,32 @@ export function SuggestionRequest({
           Priority Mode
         </label>
         <div className="grid grid-cols-2 gap-3">
-          <button
+          <Button
             type="button"
+            variant={priority === "cost_effective" ? "primary" : "secondary"}
+            disabled={isLoading}
             onClick={() => setPriority("cost_effective")}
-            className={`rounded-lg border-2 p-3 text-left transition-colors ${
-              priority === "cost_effective"
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 bg-white hover:border-gray-300"
-            }`}
           >
-            <div className="font-medium text-gray-900">Cost-Focused</div>
-            <div className="mt-1 text-xs text-gray-500">
-              Prioritize initiatives with lowest cost per tonne
+            <div className="text-left">
+              <div className="font-medium">Cost-Focused</div>
+              <div className="mt-1 text-xs opacity-80">
+                Prioritize initiatives with lowest cost per tonne
+              </div>
             </div>
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant={priority === "high_impact" ? "primary" : "secondary"}
+            disabled={isLoading}
             onClick={() => setPriority("high_impact")}
-            className={`rounded-lg border-2 p-3 text-left transition-colors ${
-              priority === "high_impact"
-                ? "border-blue-500 bg-blue-50"
-                : "border-gray-200 bg-white hover:border-gray-300"
-            }`}
           >
-            <div className="font-medium text-gray-900">Highest-Impact</div>
-            <div className="mt-1 text-xs text-gray-500">
-              Prioritize initiatives with largest CO₂e reduction
+            <div className="text-left">
+              <div className="font-medium">Highest-Impact</div>
+              <div className="mt-1 text-xs opacity-80">
+                Prioritize initiatives with largest CO₂e reduction
+              </div>
             </div>
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -101,18 +105,15 @@ export function SuggestionRequest({
         </label>
         <div className="flex gap-2">
           {[1, 2, 3].map((scope) => (
-            <button
+            <Button
               key={scope}
               type="button"
+              variant={scopeFocus.includes(scope) ? "primary" : "secondary"}
+              size="sm"
               onClick={() => toggleScope(scope)}
-              className={`rounded-lg border-2 px-4 py-2 text-sm font-medium transition-colors ${
-                scopeFocus.includes(scope)
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                  : "border-gray-200 bg-white text-gray-700 hover:border-gray-300"
-              }`}
             >
               Scope {scope}
-            </button>
+            </Button>
           ))}
         </div>
         <p className="mt-1 text-xs text-gray-500">
@@ -120,23 +121,23 @@ export function SuggestionRequest({
         </p>
       </div>
 
-      {/* Max suggestions slider */}
+      {/* Max suggestions */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">
-          Number of Suggestions: {maxSuggestions}
+        <label htmlFor="max-suggestions" className="block text-sm font-medium text-gray-700 mb-2">
+          Number of Suggestions
         </label>
-        <input
-          type="range"
-          min="1"
-          max="10"
+        <PrismInput
+          id="max-suggestions"
+          type="number"
+          min={1}
+          max={10}
+          step={1}
           value={maxSuggestions}
-          onChange={(e) => setMaxSuggestions(parseInt(e.target.value, 10))}
-          className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+          onInput={(e) =>
+            setMaxSuggestions(parseInt((e.target as HTMLInputElement).value, 10))
+          }
         />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>1</span>
-          <span>10</span>
-        </div>
+        <p className="mt-1 text-xs text-gray-500">Between 1 and 10.</p>
       </div>
 
       {/* Budget limit */}
@@ -145,15 +146,17 @@ export function SuggestionRequest({
           Budget Limit (£)
           <span className="ml-1 text-xs font-normal text-gray-500">(optional)</span>
         </label>
-        <input
+        <PrismInput
           id="budget-limit"
           type="number"
-          min="0"
-          step="1000"
+          min={0}
+          step={1000}
           placeholder="No limit"
           value={budgetLimit ?? ""}
-          onChange={(e) => setBudgetLimit(e.target.value ? parseInt(e.target.value, 10) : undefined)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          onInput={(e) => {
+            const v = (e.target as HTMLInputElement).value;
+            setBudgetLimit(v ? parseInt(v, 10) : undefined);
+          }}
         />
         <p className="mt-1 text-xs text-gray-500">
           Only suggest initiatives within this budget
@@ -166,29 +169,25 @@ export function SuggestionRequest({
           Additional Context
           <span className="ml-1 text-xs font-normal text-gray-500">(optional)</span>
         </label>
-        <textarea
+        <PrismTextarea
           id="additional-context"
           rows={3}
           placeholder="E.g., focus on renewable energy, must be implementable within 6 months..."
           value={additionalContext}
-          onChange={(e) => setAdditionalContext(e.target.value)}
-          className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          onInput={(e) => setAdditionalContext((e.target as HTMLTextAreaElement).value)}
         />
       </div>
 
       {/* Loading indicator */}
       {isLoading && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
-          <div className="flex items-center gap-3">
-            <svg className="animate-spin h-5 w-5 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+        <div className="rounded-lg border border-[var(--core-color-primary-200,#bfdbfe)] bg-[var(--core-color-primary-50,#eff6ff)] p-4">
+          <div className="flex items-center gap-4">
+            <LoadingSpinner size="sm" label="" />
             <div>
-              <p className="text-sm font-medium text-blue-900">
+              <p className="text-sm font-medium text-[var(--core-color-primary-900,#1e3a8a)]">
                 Generating suggestions...
               </p>
-              <p className="text-xs text-blue-700 mt-0.5">
+              <p className="mt-0.5 text-xs text-[var(--core-color-primary-700,#1d4ed8)]">
                 This typically takes 5-15 seconds
               </p>
             </div>
@@ -198,21 +197,21 @@ export function SuggestionRequest({
 
       {/* Action buttons */}
       <div className="flex gap-3 justify-end pt-2">
-        <button
+        <Button
           type="button"
+          variant="secondary"
           onClick={onCancel}
           disabled={isLoading}
-          className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
           type="submit"
           disabled={isLoading}
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          loading={isLoading}
         >
           {isLoading ? "Generating..." : "Get Suggestions"}
-        </button>
+        </Button>
       </div>
     </form>
   );

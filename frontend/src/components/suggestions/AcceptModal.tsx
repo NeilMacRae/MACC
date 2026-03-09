@@ -9,7 +9,11 @@
  */
 
 import { useState } from "react";
+import { PrismCheckbox, PrismInput } from "../../prism";
 import { useScenarios } from "../../hooks/useScenarios";
+import { Button } from "../common/Button";
+import { Badge } from "../common/Badge";
+import { Modal } from "../common/Modal";
 import type { SuggestionDetail, SuggestionAccept } from "../../types/suggestions";
 
 interface AcceptModalProps {
@@ -75,20 +79,13 @@ export function AcceptModal({
   const isMultiActivity = suggestion.activity_breakdown && suggestion.activity_breakdown.length > 1;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-xl">
-        <form onSubmit={handleSubmit}>
-          {/* Header */}
-          <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4">
-            <h2 className="text-lg font-semibold text-gray-900">
-              Accept Suggestion
-            </h2>
-            <p className="mt-1 text-sm text-gray-500">
-              Review and optionally modify before creating
-            </p>
-          </div>
+    <Modal open title="Accept Suggestion" onClose={onClose}>
+      <form onSubmit={handleSubmit}>
+        <p className="mb-4 text-sm text-gray-500">
+          Review and optionally modify before creating
+        </p>
 
-          <div className="px-6 py-4 space-y-6">
+        <div className="space-y-6">
             {/* Multi-activity info */}
             {isMultiActivity && (
               <div className="rounded-lg bg-blue-50 border border-blue-200 p-4">
@@ -115,16 +112,13 @@ export function AcceptModal({
 
             {/* Name override */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Initiative Name
-              </label>
-              <input
+              <PrismInput
                 id="name"
                 type="text"
+                label="Initiative Name"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
-                disabled={isMultiActivity || undefined} // Can't override name for multi-activity
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:bg-gray-50 disabled:text-gray-500"
+                onInput={(e) => setName((e.target as HTMLInputElement).value)}
+                disabled={isMultiActivity || undefined}
               />
               {isMultiActivity && (
                 <p className="mt-1 text-xs text-gray-500">
@@ -135,17 +129,14 @@ export function AcceptModal({
 
             {/* CapEx override */}
             <div>
-              <label htmlFor="capex" className="block text-sm font-medium text-gray-700 mb-2">
-                CapEx (£)
-              </label>
-              <input
+              <PrismInput
                 id="capex"
                 type="number"
-                min="0"
-                step="1000"
+                label="CapEx (£)"
+                min={0}
+                step={1000}
                 value={capex}
-                onChange={(e) => setCapex(parseFloat(e.target.value))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onInput={(e) => setCapex(parseFloat((e.target as HTMLInputElement).value))}
               />
               <p className="mt-1 text-xs text-gray-500">
                 Original: £{fmt(suggestion.estimated_capex_gbp, 0)}
@@ -155,17 +146,14 @@ export function AcceptModal({
 
             {/* CO2e reduction override */}
             <div>
-              <label htmlFor="reduction" className="block text-sm font-medium text-gray-700 mb-2">
-                Annual CO₂e Reduction (tonnes)
-              </label>
-              <input
+              <PrismInput
                 id="reduction"
                 type="number"
-                min="0"
-                step="0.1"
+                label="Annual CO₂e Reduction (tonnes)"
+                min={0}
+                step={0.1}
                 value={reduction}
-                onChange={(e) => setReduction(parseFloat(e.target.value))}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onInput={(e) => setReduction(parseFloat((e.target as HTMLInputElement).value))}
               />
               <p className="mt-1 text-xs text-gray-500">
                 Original: {fmt(suggestion.estimated_co2e_reduction_annual_tonnes, 1)} t/yr
@@ -175,17 +163,13 @@ export function AcceptModal({
 
             {/* Owner */}
             <div>
-              <label htmlFor="owner" className="block text-sm font-medium text-gray-700 mb-2">
-                Owner
-                <span className="ml-1 text-xs font-normal text-gray-500">(optional)</span>
-              </label>
-              <input
+              <PrismInput
                 id="owner"
                 type="text"
+                label="Owner (optional)"
                 placeholder="e.g., Operations Manager"
                 value={owner}
-                onChange={(e) => setOwner(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                onInput={(e) => setOwner((e.target as HTMLInputElement).value)}
               />
             </div>
 
@@ -198,32 +182,29 @@ export function AcceptModal({
                 </label>
                 <div className="space-y-2">
                   {scenarios.map((scenario) => (
-                    <label
+                    <div
                       key={scenario.id}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer"
+                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:bg-gray-50"
                     >
-                      <input
-                        type="checkbox"
+                      <PrismCheckbox
                         checked={selectedScenarios.includes(scenario.id)}
                         onChange={() => toggleScenario(scenario.id)}
-                        className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-gray-900">
-                          {scenario.name}
-                        </p>
-                        {scenario.description && (
-                          <p className="text-xs text-gray-500 mt-0.5">
-                            {scenario.description}
+                      >
+                        <div className="flex-1">
+                          <p className="text-sm font-medium text-gray-900">
+                            {scenario.name}
                           </p>
+                          {scenario.description && (
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {scenario.description}
+                            </p>
+                          )}
+                        </div>
+                        {scenario.is_baseline && (
+                          <Badge variant="info">Baseline</Badge>
                         )}
-                      </div>
-                      {scenario.is_baseline && (
-                        <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800">
-                          Baseline
-                        </span>
-                      )}
-                    </label>
+                      </PrismCheckbox>
+                    </div>
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-gray-500">
@@ -231,28 +212,18 @@ export function AcceptModal({
                 </p>
               </div>
             )}
-          </div>
+        </div>
 
-          {/* Footer */}
-          <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4 flex gap-3 justify-end">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isLoading}
-              className="rounded-lg px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isLoading ? "Creating..." : isMultiActivity ? `Create ${suggestion.activity_breakdown!.length} Initiatives` : "Create Initiative"}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+        {/* Footer */}
+        <div className="flex gap-3 justify-end pt-4">
+          <Button type="button" variant="secondary" disabled={isLoading} onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" loading={isLoading}>
+            {isLoading ? "Creating..." : isMultiActivity ? `Create ${suggestion.activity_breakdown!.length} Initiatives` : "Create Initiative"}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 }

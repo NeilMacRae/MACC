@@ -1,5 +1,6 @@
 // ─── UnitDetail ───────────────────────────────────────────────────────────────
 import { useState } from 'react';
+import { PrismOption, PrismSelect } from '../../prism';
 import type { MarketFactorType } from '../../types/emissions';
 import { useUnitDetail } from '../../hooks/useEmissions';
 import { ScopeBarChart } from './ScopeBarChart';
@@ -49,14 +50,14 @@ export function UnitDetail({ unitId, year, mft, onNavigate }: UnitDetailProps) {
       </div>
 
       {/* Scope breakdown */}
-      <div className="rounded-lg border border-gray-200 bg-white p-5">
+      <div data-prism="card" className="rounded-lg border border-gray-200 bg-white p-5">
         <h3 className="mb-3 text-sm font-semibold text-gray-700">Scope Breakdown</h3>
         <ScopeBarChart by_scope={data.by_scope} />
       </div>
 
       {/* Child units (for divisions) */}
       {data.child_units.length > 0 && (
-        <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+        <div data-prism="card" className="rounded-lg border border-gray-200 bg-white overflow-hidden">
           <div className="border-b border-gray-200 bg-gray-50 px-5 py-3">
             <h3 className="text-sm font-semibold text-gray-700">Child Units</h3>
           </div>
@@ -89,16 +90,17 @@ export function UnitDetail({ unitId, year, mft, onNavigate }: UnitDetailProps) {
         <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
           <div className="border-b border-gray-200 bg-gray-50 px-5 py-3 flex items-center justify-between">
             <h3 className="text-sm font-semibold text-gray-700">Emission Sources</h3>
-            <select
+            <PrismSelect
               value={qualityFilter}
-              onChange={(e) => setQualityFilter(e.target.value as QualityLevel | 'all')}
-              className="rounded-md border border-gray-300 px-2 py-1 text-xs text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              onChange={(e) =>
+                setQualityFilter((e.target as HTMLSelectElement).value as QualityLevel | 'all')
+              }
             >
-              <option value="all">All quality</option>
-              <option value="Actual">Actual only</option>
-              <option value="Estimated">Estimated only</option>
-              <option value="Missing">Missing only</option>
-            </select>
+              <PrismOption value="all">All quality</PrismOption>
+              <PrismOption value="Actual">Actual only</PrismOption>
+              <PrismOption value="Estimated">Estimated only</PrismOption>
+              <PrismOption value="Missing">Missing only</PrismOption>
+            </PrismSelect>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

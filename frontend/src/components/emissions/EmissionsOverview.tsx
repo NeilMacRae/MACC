@@ -1,5 +1,7 @@
 // ─── EmissionsOverview ────────────────────────────────────────────────────────
 import { useState } from 'react';
+import { PrismOption, PrismSelect } from '../../prism';
+import { Button } from '../common/Button';
 import type { MarketFactorType } from '../../types/emissions';
 import { useEmissionsOverview } from '../../hooks/useEmissions';
 import { ScopeBarChart } from './ScopeBarChart';
@@ -37,40 +39,39 @@ export function EmissionsOverview({ year, mft, onYearChange, onMftChange }: Emis
         </div>
         <div className="flex items-center gap-3">
           {/* Quality filter */}
-          <select
+          <PrismSelect
             value={qualityFilter}
-            onChange={(e) => setQualityFilter(e.target.value as QualityLevel | 'all')}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onChange={(e) =>
+              setQualityFilter((e.target as HTMLSelectElement).value as QualityLevel | 'all')
+            }
           >
-            <option value="all">All quality</option>
-            <option value="Actual">Actual only</option>
-            <option value="Estimated">Estimated only</option>
-            <option value="Missing">Missing only</option>
-          </select>
+            <PrismOption value="all">All quality</PrismOption>
+            <PrismOption value="Actual">Actual only</PrismOption>
+            <PrismOption value="Estimated">Estimated only</PrismOption>
+            <PrismOption value="Missing">Missing only</PrismOption>
+          </PrismSelect>
           {/* Year selector */}
-          <select
-            value={year ?? data.year}
-            onChange={(e) => onYearChange(Number(e.target.value))}
-            className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          <PrismSelect
+            value={String(year ?? data.year)}
+            onChange={(e) => onYearChange(Number((e.target as HTMLSelectElement).value))}
           >
             {data.available_years.map((y) => (
-              <option key={y} value={y}>{y}</option>
+              <PrismOption key={y} value={String(y)}>
+                {y}
+              </PrismOption>
             ))}
-          </select>
+          </PrismSelect>
           {/* Location / Market toggle */}
-          <div className="flex rounded-md border border-gray-300 overflow-hidden text-sm">
+          <div className="flex gap-1">
             {(['Location', 'Market'] as const).map((t) => (
-              <button
+              <Button
                 key={t}
+                variant={mft === t ? 'primary' : 'secondary'}
+                size="sm"
                 onClick={() => onMftChange(t)}
-                className={`px-3 py-1.5 font-medium transition-colors ${
-                  mft === t
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50'
-                }`}
               >
                 {t}
-              </button>
+              </Button>
             ))}
           </div>
         </div>
@@ -78,12 +79,12 @@ export function EmissionsOverview({ year, mft, onYearChange, onMftChange }: Emis
 
       {/* Scope chart + by_question_group */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <div data-prism="card" className="rounded-lg border border-gray-200 bg-white p-5">
           <h3 className="mb-4 text-sm font-semibold text-gray-700">Emissions by Scope</h3>
           <ScopeBarChart by_scope={data.by_scope} />
         </div>
 
-        <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <div data-prism="card" className="rounded-lg border border-gray-200 bg-white p-5">
           <h3 className="mb-4 text-sm font-semibold text-gray-700">By Activity Category</h3>
           <div className="space-y-2">
             {data.by_question_group.map((qg) => (
@@ -110,7 +111,7 @@ export function EmissionsOverview({ year, mft, onYearChange, onMftChange }: Emis
       </div>
 
       {/* Top sources table */}
-      <div className="rounded-lg border border-gray-200 bg-white">
+      <div data-prism="table" className="rounded-lg border border-gray-200 bg-white">
         <div className="border-b border-gray-200 px-5 py-3">
           <h3 className="text-sm font-semibold text-gray-700">Top Emission Sources</h3>
         </div>

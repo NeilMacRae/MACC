@@ -86,7 +86,7 @@ interface HierarchyBrowserProps {
 
 export function HierarchyBrowser({ root, onSelectUnit, selectedId }: HierarchyBrowserProps) {
   return (
-    <div className="rounded-lg border border-gray-200 bg-white overflow-hidden">
+    <div data-prism="table" className="rounded-lg border border-gray-200 bg-white overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="border-b border-gray-200 bg-gray-50">
@@ -110,7 +110,7 @@ export function HierarchyBrowser({ root, onSelectUnit, selectedId }: HierarchyBr
           </tbody>
         </table>
       </div>
-      <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-400">
+      <p className="border-t border-gray-100 px-4 py-2 text-xs text-gray-600">
         Click any row to view details
       </p>
     </div>

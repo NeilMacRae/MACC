@@ -12,6 +12,13 @@
 
 import { useMemo, useState } from "react";
 import {
+  PrismInput,
+  PrismTextarea,
+  PrismSelect,
+  PrismOption,
+  PrismCheckbox,
+} from "../../prism";
+import {
   useCascadeScopes,
   useCascadeQuestionGroups,
   useCascadeQuestions,
@@ -22,6 +29,8 @@ import {
   useCreateInitiative,
   useUpdateInitiative,
 } from "../../hooks/useInitiatives";
+import { Button } from "../common/Button";
+import { Modal } from "../common/Modal";
 import type {
   CascadeCompanyUnitItem,
   ConfidenceLevel,
@@ -187,111 +196,96 @@ export function InitiativeForm({ initiative, onClose, onSaved }: Props) {
 
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white shadow-2xl">
-        {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-gray-200 bg-white px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {isEdit ? "Edit Initiative" : "New Abatement Initiative"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
-          >
-            ✕
-          </button>
-        </div>
-
-        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-5">
+    <Modal
+      open
+      title={isEdit ? "Edit Initiative" : "New Abatement Initiative"}
+      onClose={onClose}
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
           {/* Name */}
-          <Field label="Name *" error={errors.name}>
-            <input
-              className="input"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. LED Lighting Upgrade"
-            />
-          </Field>
+          <PrismInput
+            type="text"
+            label="Name *"
+            value={name}
+            onInput={(e) => setName((e.target as HTMLInputElement).value)}
+            placeholder="e.g. LED Lighting Upgrade"
+          />
+          {errors.name && <p className="-mt-4 text-xs text-red-600">{errors.name}</p>}
 
           {/* Description */}
-          <Field label="Description">
-            <textarea
-              className="input resize-none"
-              rows={2}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Optional: describe the initiative"
-            />
-          </Field>
+          <PrismTextarea
+            label="Description"
+            rows={2}
+            value={description}
+            onInput={(e) => setDescription((e.target as HTMLTextAreaElement).value)}
+            placeholder="Optional: describe the initiative"
+          />
 
           {/* Status */}
-          <Field label="Status">
-            <select
-              className="input"
-              value={status}
-              onChange={(e) => setStatus(e.target.value as InitiativeStatus)}
-            >
-              {STATUS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace("_", " ").replace(/^\w/, (c) => c.toUpperCase())}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <PrismSelect
+            label="Status"
+            value={status}
+            onChange={(e) => setStatus((e.target as HTMLSelectElement).value as InitiativeStatus)}
+          >
+            {STATUS_OPTIONS.map((s) => (
+              <PrismOption key={s} value={s}>
+                {s.replace("_", " ").replace(/^\w/, (c) => c.toUpperCase())}
+              </PrismOption>
+            ))}
+          </PrismSelect>
 
           {/* CapEx + OpEx */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="CapEx — upfront cost (£) *" error={errors.capex_gbp}>
-              <input
-                className="input"
+            <div>
+              <PrismInput
                 type="number"
+                label="CapEx — upfront cost (£) *"
                 min={0}
                 step="any"
                 value={capexGbp}
-                onChange={(e) => setCapexGbp(e.target.value)}
+                onInput={(e) => setCapexGbp((e.target as HTMLInputElement).value)}
                 placeholder="45000"
               />
-            </Field>
-            <Field label="OpEx — annual change (£)">
-              <input
-                className="input"
+              {errors.capex_gbp && <p className="mt-1 text-xs text-red-600">{errors.capex_gbp}</p>}
+            </div>
+            <div>
+              <PrismInput
                 type="number"
+                label="OpEx — annual change (£)"
                 step="any"
                 value={opexGbp}
-                onChange={(e) => setOpexGbp(e.target.value)}
+                onInput={(e) => setOpexGbp((e.target as HTMLInputElement).value)}
                 placeholder="-12000 (saving) or +5000 (cost)"
               />
-              <p className="mt-1 text-xs text-gray-400">
+              <p className="mt-1 text-xs text-gray-600">
                 Negative = annual saving, positive = additional annual cost
               </p>
-            </Field>
+            </div>
           </div>
 
           {/* CO2e + Lifespan */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Annual CO₂e reduction (tCO₂e/yr) *" error={errors.co2e}>
-              <input
-                className="input"
+            <div>
+              <PrismInput
                 type="number"
+                label="Annual CO₂e reduction (tCO₂e/yr) *"
                 min={0.001}
                 step="any"
                 value={co2eReduction}
-                onChange={(e) => setCo2eReduction(e.target.value)}
+                onInput={(e) => setCo2eReduction((e.target as HTMLInputElement).value)}
                 placeholder="150"
               />
-            </Field>
-            <Field label="Lifespan (years)">
-              <input
-                className="input"
-                type="number"
-                min={1}
-                step={1}
-                value={lifespanYears}
-                onChange={(e) => setLifespanYears(e.target.value)}
-                placeholder="10"
-              />
-            </Field>
+              {errors.co2e && <p className="mt-1 text-xs text-red-600">{errors.co2e}</p>}
+            </div>
+            <PrismInput
+              type="number"
+              label="Lifespan (years)"
+              min={1}
+              step={1}
+              value={lifespanYears}
+              onInput={(e) => setLifespanYears((e.target as HTMLInputElement).value)}
+              placeholder="10"
+            />
           </div>
 
           {/* Live cost preview */}
@@ -315,49 +309,44 @@ export function InitiativeForm({ initiative, onClose, onSaved }: Props) {
               )}
             </div>
           ) : (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-600">
               Fill CapEx &amp; CO₂e reduction to see £/tCO₂e preview
             </p>
           )}
 
           {/* Owner + Confidence */}
           <div className="grid grid-cols-2 gap-4">
-            <Field label="Owner">
-              <input
-                className="input"
-                value={owner}
-                onChange={(e) => setOwner(e.target.value)}
-                placeholder="Facilities Manager"
-              />
-            </Field>
-            <Field label="Confidence">
-              <select
-                className="input"
-                value={confidence}
-                onChange={(e) =>
-                  setConfidence(e.target.value as ConfidenceLevel | "")
-                }
-              >
-                <option value="">— select —</option>
-                {CONFIDENCE_OPTIONS.map((c) => (
-                  <option key={c} value={c}>
-                    {c.charAt(0).toUpperCase() + c.slice(1)}
-                  </option>
-                ))}
-              </select>
-            </Field>
+            <PrismInput
+              type="text"
+              label="Owner"
+              value={owner}
+              onInput={(e) => setOwner((e.target as HTMLInputElement).value)}
+              placeholder="Facilities Manager"
+            />
+            <PrismSelect
+              label="Confidence"
+              value={confidence}
+              onChange={(e) =>
+                setConfidence((e.target as HTMLSelectElement).value as ConfidenceLevel | "")
+              }
+            >
+              <PrismOption value="">— select —</PrismOption>
+              {CONFIDENCE_OPTIONS.map((c) => (
+                <PrismOption key={c} value={c}>
+                  {c.charAt(0).toUpperCase() + c.slice(1)}
+                </PrismOption>
+              ))}
+            </PrismSelect>
           </div>
 
           {/* Notes */}
-          <Field label="Notes">
-            <textarea
-              className="input resize-none"
-              rows={2}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              placeholder="Any additional context"
-            />
-          </Field>
+          <PrismTextarea
+            label="Notes"
+            rows={2}
+            value={notes}
+            onInput={(e) => setNotes((e.target as HTMLTextAreaElement).value)}
+            placeholder="Any additional context"
+          />
 
           {/* ── Emission source cascade picker ────────────────────────────────── */}
           <div>
@@ -450,42 +439,35 @@ export function InitiativeForm({ initiative, onClose, onSaved }: Props) {
                     5. Sites / units (select all that apply)
                   </p>
                   {unitsLoading ? (
-                    <p className="text-xs text-gray-400">Loading…</p>
+                    <p className="text-xs text-gray-600">Loading…</p>
                   ) : (
                     <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-200 divide-y divide-gray-100">
                       {(unitsData?.items ?? []).length === 0 ? (
-                        <p className="px-3 py-2 text-xs text-gray-400">
+                        <p className="px-3 py-2 text-xs text-gray-600">
                           No units found
                         </p>
                       ) : (
                         (unitsData?.items ?? []).map((unit) => (
-                          <label
-                            key={unit.emission_source_id}
-                            className="flex cursor-pointer items-center gap-3 px-3 py-2 hover:bg-gray-50"
-                          >
-                            <input
-                              type="checkbox"
-                              className="h-4 w-4 rounded border-gray-300 text-blue-600"
-                              checked={selectedSourceIds.has(
-                                unit.emission_source_id,
-                              )}
+                          <div key={unit.emission_source_id} className="px-3 py-2">
+                            <PrismCheckbox
+                              checked={selectedSourceIds.has(unit.emission_source_id)}
                               onChange={() => toggleUnit(unit)}
-                            />
-                            <span className="text-xs text-gray-700">
-                              <span className="font-medium">
-                                {unit.company_unit_name}
-                              </span>
-                              {unit.company_unit_type && (
-                                <span className="text-gray-400">
-                                  {" "}
-                                  · {unit.company_unit_type}
+                            >
+                              <span className="text-xs text-gray-700">
+                                <span className="font-medium">
+                                  {unit.company_unit_name}
                                 </span>
-                              )}
-                              <span className="ml-2 text-gray-400">
-                                {unit.co2e_tonnes.toFixed(1)} t
+                                {unit.company_unit_type && (
+                                  <span className="text-gray-400">
+                                    {" "}· {unit.company_unit_type}
+                                  </span>
+                                )}
+                                <span className="ml-2 text-gray-400">
+                                  {unit.co2e_tonnes.toFixed(1)} t
+                                </span>
                               </span>
-                            </span>
-                          </label>
+                            </PrismCheckbox>
+                          </div>
                         ))
                       )}
                     </div>
@@ -494,7 +476,7 @@ export function InitiativeForm({ initiative, onClose, onSaved }: Props) {
               )}
             </div>
 
-            <p className="mt-2 text-xs text-gray-400">
+            <p className="mt-2 text-xs text-gray-600">
               {selectedSourceIds.size} source
               {selectedSourceIds.size !== 1 ? "s" : ""} selected
             </p>
@@ -520,52 +502,23 @@ export function InitiativeForm({ initiative, onClose, onSaved }: Props) {
 
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
+            <Button type="button" variant="secondary" onClick={onClose}>
               Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-60"
-            >
+            </Button>
+            <Button type="submit" loading={isPending}>
               {isPending
                 ? "Saving…"
                 : isEdit
                   ? "Save changes"
                   : "Create initiative"}
-            </button>
+            </Button>
           </div>
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }
 
 // ── Helper sub-components ─────────────────────────────────────────────────────
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div>
-      <label className="mb-1 block text-sm font-medium text-gray-700">
-        {label}
-      </label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-    </div>
-  );
-}
 
 interface CascadeItem {
   key: string;
@@ -588,28 +541,23 @@ function CascadeStep({
     <div>
       <p className="mb-1.5 text-xs font-medium text-gray-600">{label}</p>
       {loading ? (
-        <p className="text-xs text-gray-400">Loading…</p>
+        <p className="text-xs text-gray-600">Loading…</p>
       ) : (
         <div className="flex flex-wrap gap-2">
           {items.map((item) => (
-            <button
+            <Button
               key={item.key}
               type="button"
+              size="sm"
+              variant={item.selected ? "primary" : "secondary"}
               onClick={item.onSelect}
-              className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
-                item.selected
-                  ? "border-blue-500 bg-blue-50 text-blue-700"
-                  : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:bg-gray-50"
-              }`}
             >
               {item.label}
-              {item.sub && (
-                <span className="ml-1 opacity-60">{item.sub}</span>
-              )}
-            </button>
+              {item.sub && <span className="ml-1 opacity-60">{item.sub}</span>}
+            </Button>
           ))}
           {items.length === 0 && (
-            <p className="text-xs text-gray-400">No items</p>
+            <p className="text-xs text-gray-600">No items</p>
           )}
         </div>
       )}

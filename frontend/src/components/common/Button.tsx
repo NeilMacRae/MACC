@@ -1,65 +1,78 @@
 // ─── Button ───────────────────────────────────────────────────────────────────
+// Prism-migrated: wraps @ecoonline/prism-web-components-react PrismButton.
+//
+// Variant mapping:
+//   primary  → primary=true
+//   secondary → secondary=true
+//   ghost    → secondary=true (secondary styling without border emphasis)
+//   danger   → critical=true  (+ secondary base)
+//
+// Size mapping: sm→small  md→medium  lg→large
+
+import React from 'react';
+import { PrismButton } from '../../prism';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps {
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
+  disabled?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  children?: React.ReactNode;
+  onClick?: React.MouseEventHandler<HTMLElement>;
+  type?: 'button' | 'submit' | 'reset';
+  className?: string;
+  /** HTML name attribute forwarded to PrismButton for form submissions */
+  name?: string;
+  /** HTML value attribute forwarded to PrismButton for form submissions */
+  value?: string;
 }
 
-const variantClass: Record<ButtonVariant, string> = {
-  primary:
-    'bg-blue-600 text-white hover:bg-blue-700 focus-visible:ring-blue-500 border border-transparent',
-  secondary:
-    'bg-white text-gray-700 hover:bg-gray-50 focus-visible:ring-blue-500 border border-gray-300',
-  ghost:
-    'bg-transparent text-gray-600 hover:bg-gray-100 focus-visible:ring-gray-400 border border-transparent',
-  danger:
-    'bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-500 border border-transparent',
-};
-
-const sizeClass: Record<ButtonSize, string> = {
-  sm: 'text-xs px-3 py-1.5 gap-1.5',
-  md: 'text-sm px-4 py-2 gap-2',
-  lg: 'text-base px-5 py-2.5 gap-2',
+const PRISM_SIZE: Record<ButtonSize, 'small' | 'medium' | 'large'> = {
+  sm: 'small',
+  md: 'medium',
+  lg: 'large',
 };
 
 export function Button({
   variant = 'primary',
   size = 'md',
   loading = false,
+  disabled = false,
+  className,
   leftIcon,
   rightIcon,
-  disabled,
   children,
-  className = '',
-  ...props
+  onClick,
+  type = 'button',
+  name,
+  value,
 }: ButtonProps) {
-  const isDisabled = disabled || loading;
+  const isPrimary = variant === 'primary';
+  const isSecondary = variant === 'secondary' || variant === 'ghost';
+  const isCritical = variant === 'danger';
 
   return (
-    <button
-      disabled={isDisabled}
-      className={`inline-flex items-center justify-center rounded-md font-medium transition-colors
-        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2
-        disabled:cursor-not-allowed disabled:opacity-50
-        ${variantClass[variant]} ${sizeClass[size]} ${className}`}
-      {...props}
+    <PrismButton
+      primary={isPrimary}
+      secondary={isSecondary}
+      critical={isCritical}
+      size={PRISM_SIZE[size]}
+      loading={loading}
+      disabled={disabled || loading}
+      type={type}
+      name={name}
+      value={value}
+      onClick={onClick as unknown as (e: Event) => void}
+      className={className}
     >
-      {loading ? (
-        <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-      ) : (
-        leftIcon
-      )}
+      {leftIcon}
       {children}
-      {!loading && rightIcon}
-    </button>
+      {rightIcon}
+    </PrismButton>
   );
 }

@@ -3,3 +3,9 @@ dist/
 build/
 coverage/
 .vite/
+
+# Playwright / test artifacts
+test-results/
+playwright-report/
+frontend/test-results/
+frontend/playwright-report/
