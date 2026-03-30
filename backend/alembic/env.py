@@ -7,11 +7,13 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
+import os
+
 from alembic import context
 
 # Import all models so their metadata is registered
 import src.models  # noqa: F401  (side-effect import for metadata)
-from src.models.database import Base
+from src.models.database import Base, DATABASE_URL
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -27,7 +29,7 @@ target_metadata = Base.metadata
 
 def run_migrations_offline() -> None:
     """Emit SQL to stdout without a live DB connection."""
-    url = config.get_main_option("sqlalchemy.url")
+    url = DATABASE_URL or config.get_main_option("sqlalchemy.url")
     context.configure(
         url=url,
         target_metadata=target_metadata,
@@ -51,8 +53,10 @@ def do_run_migrations(connection: Connection) -> None:
 
 async def run_async_migrations() -> None:
     """Use the async engine to run migrations online."""
+    section = config.get_section(config.config_ini_section, {})
+    section["sqlalchemy.url"] = DATABASE_URL or section.get("sqlalchemy.url", "")
     connectable = async_engine_from_config(
-        config.get_section(config.config_ini_section, {}),
+        section,
         prefix="sqlalchemy.",
         poolclass=pool.NullPool,
     )
