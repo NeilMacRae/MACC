@@ -66,8 +66,10 @@ def upgrade() -> None:
         SET cost_per_tonne = CASE
             WHEN co2e_reduction_annual_tonnes > 0
             THEN ROUND(
-                (capex_gbp + COALESCE(opex_annual_gbp, 0.0) * lifespan_years)
-                / co2e_reduction_annual_tonnes,
+                CAST(
+                    (capex_gbp + COALESCE(opex_annual_gbp, 0.0) * lifespan_years)
+                    / co2e_reduction_annual_tonnes
+                AS NUMERIC),
                 4
             )
             ELSE 0.0
@@ -82,7 +84,7 @@ def upgrade() -> None:
         UPDATE abatement_initiatives
         SET payback_years = CASE
             WHEN opex_annual_gbp IS NOT NULL AND opex_annual_gbp < 0
-            THEN ROUND(capex_gbp / ABS(opex_annual_gbp), 4)
+            THEN ROUND(CAST(capex_gbp / ABS(opex_annual_gbp) AS NUMERIC), 4)
             ELSE NULL
         END
         """
