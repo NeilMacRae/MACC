@@ -345,7 +345,7 @@ async def seed(db: AsyncSession) -> None:
 
     # Emission targets
     target_2030 = EmissionTarget(
-        context_id=context.id,
+        organisation_id=org.id,
         target_year=2030,
         target_type="absolute",
         target_value_pct=50.0,
@@ -357,7 +357,7 @@ async def seed(db: AsyncSession) -> None:
         notes="50% Scope 1+2 reduction by 2030 (vs 2023 baseline)",
     )
     target_2040 = EmissionTarget(
-        context_id=context.id,
+        organisation_id=org.id,
         target_year=2040,
         target_type="absolute",
         target_value_pct=100.0,
