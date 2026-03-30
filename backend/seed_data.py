@@ -502,8 +502,8 @@ async def seed(db: AsyncSession) -> None:
         status="completed",
         records_created=total_sources + total_records,
         records_updated=0,
-        started_at=datetime.now(tz=timezone.utc),
-        completed_at=datetime.now(tz=timezone.utc),
+        started_at=datetime.now(timezone.utc).replace(tzinfo=None),
+        completed_at=datetime.now(timezone.utc).replace(tzinfo=None),
     )
     db.add(sync)
     await db.commit()

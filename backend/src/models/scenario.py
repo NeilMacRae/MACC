@@ -16,7 +16,7 @@ def _uuid() -> str:
 
 
 def _now() -> datetime:
-    return datetime.now(tz=timezone.utc)
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 class Scenario(Base):
