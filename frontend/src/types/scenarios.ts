@@ -43,7 +43,7 @@ export interface OrgContextUpsert {
 
 export interface Target {
   id: string;
-  context_id: string;
+  organisation_id: string;
   target_year: number;
   target_type: TargetType;
   target_value_pct: number;

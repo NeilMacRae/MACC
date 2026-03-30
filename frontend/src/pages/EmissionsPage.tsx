@@ -33,13 +33,18 @@ export function EmissionsPage() {
       />
 
       {/* Tab bar */}
-      <div className="border-b border-gray-200 bg-white px-6">
-        <nav className="-mb-px flex gap-6" aria-label="Emissions tabs">
+      <div className="px-6 mt-4">
+        <div role="tablist" aria-label="Emissions sections" className="flex border-b border-gray-200">
           {tabs.map((t) => (
             <button
               key={t.id}
+              role="tab"
+              id={`emissions-tab-${t.id}`}
+              aria-selected={tab === t.id}
+              aria-controls={`emissions-panel-${t.id}`}
+              tabIndex={tab === t.id ? 0 : -1}
               onClick={() => setTab(t.id)}
-              className={`py-3 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-5 py-3 text-sm font-medium border-b-2 -mb-px transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
                 tab === t.id
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -48,21 +53,23 @@ export function EmissionsPage() {
               {t.label}
             </button>
           ))}
-        </nav>
+        </div>
       </div>
 
       {/* Tab content */}
       {tab === 'overview' && (
-        <EmissionsOverview
-          year={year}
-          mft={mft}
-          onYearChange={setYear}
-          onMftChange={setMft}
-        />
+        <div id="emissions-panel-overview" role="tabpanel" aria-labelledby="emissions-tab-overview">
+          <EmissionsOverview
+            year={year}
+            mft={mft}
+            onYearChange={setYear}
+            onMftChange={setMft}
+          />
+        </div>
       )}
 
       {tab === 'hierarchy' && (
-        <div className="p-6">
+        <div id="emissions-panel-hierarchy" role="tabpanel" aria-labelledby="emissions-tab-hierarchy" className="p-6">
           {hierarchyLoading ? (
             <div className="flex justify-center py-20">
               <LoadingSpinner size="lg" label="Loading hierarchy…" />
@@ -89,7 +96,7 @@ export function EmissionsPage() {
                     />
                   </div>
                 ) : (
-                  <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-400">
+                  <div className="flex h-40 items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-600">
                     Select a unit to see details
                   </div>
                 )}
@@ -102,7 +109,7 @@ export function EmissionsPage() {
       )}
 
       {tab === 'trends' && (
-        <div className="p-6 space-y-6">
+        <div id="emissions-panel-trends" role="tabpanel" aria-labelledby="emissions-tab-trends" className="p-6 space-y-6">
           {/* Org-wide trends */}
           <TrendChart mft={mft} />
           {/* Unit-specific if selected */}
@@ -110,7 +117,7 @@ export function EmissionsPage() {
             <TrendChart unitId={selectedUnitId} mft={mft} />
           )}
           {!selectedUnitId && (
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-gray-600">
               Select a unit in the Hierarchy tab to see unit-level trends.
             </p>
           )}

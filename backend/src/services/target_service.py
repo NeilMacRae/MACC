@@ -18,7 +18,7 @@ from fastapi import HTTPException, status as http_status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.models.context import EmissionTarget, OrganisationalContext
+from src.models.context import EmissionTarget
 from src.models.emissions import EmissionRecord, EmissionSource
 from src.models.initiative import AbatementInitiative
 from src.models.organisation import CompanyUnit
@@ -40,26 +40,13 @@ def _compute_target_co2e(baseline_co2e_tonnes: float, target_value_pct: float) -
     return round(baseline_co2e_tonnes * (1 - target_value_pct / 100), 4)
 
 
-async def _get_context(db: AsyncSession, org_id: str) -> OrganisationalContext:
-    result = await db.execute(
-        select(OrganisationalContext).where(OrganisationalContext.organisation_id == org_id)
-    )
-    ctx = result.scalar_one_or_none()
-    if ctx is None:
-        raise HTTPException(
-            status_code=http_status.HTTP_404_NOT_FOUND,
-            detail="No organisational context found. Create one via PUT /context first.",
-        )
-    return ctx
-
-
 async def _get_target(
-    db: AsyncSession, target_id: str, context_id: str
+    db: AsyncSession, target_id: str, org_id: str
 ) -> EmissionTarget:
     result = await db.execute(
         select(EmissionTarget).where(
             EmissionTarget.id == target_id,
-            EmissionTarget.context_id == context_id,
+            EmissionTarget.organisation_id == org_id,
         )
     )
     t = result.scalar_one_or_none()
@@ -123,10 +110,9 @@ async def _current_emissions_tonnes(
 async def list_targets(
     db: AsyncSession, org_id: str
 ) -> TargetListResponse:
-    ctx = await _get_context(db, org_id)
     result = await db.execute(
         select(EmissionTarget)
-        .where(EmissionTarget.context_id == ctx.id)
+        .where(EmissionTarget.organisation_id == org_id)
         .order_by(EmissionTarget.target_year)
     )
     rows = list(result.scalars().all())
@@ -136,8 +122,6 @@ async def list_targets(
 async def create_target(
     db: AsyncSession, org_id: str, payload: TargetCreate
 ) -> TargetResponse:
-    ctx = await _get_context(db, org_id)
-
     if payload.target_year <= payload.baseline_year:
         raise HTTPException(
             status_code=http_status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -145,7 +129,7 @@ async def create_target(
         )
 
     t = EmissionTarget(
-        context_id=ctx.id,
+        organisation_id=org_id,
         target_year=payload.target_year,
         target_type=payload.target_type,
         target_value_pct=payload.target_value_pct,
@@ -167,8 +151,7 @@ async def create_target(
 async def update_target(
     db: AsyncSession, org_id: str, target_id: str, payload: TargetUpdate
 ) -> TargetResponse:
-    ctx = await _get_context(db, org_id)
-    t = await _get_target(db, target_id, ctx.id)
+    t = await _get_target(db, target_id, org_id)
 
     for field, val in payload.model_dump(exclude_unset=True).items():
         setattr(t, field, val)
@@ -194,8 +177,7 @@ async def update_target(
 async def delete_target(
     db: AsyncSession, org_id: str, target_id: str
 ) -> None:
-    ctx = await _get_context(db, org_id)
-    t = await _get_target(db, target_id, ctx.id)
+    t = await _get_target(db, target_id, org_id)
     await db.delete(t)
     await db.commit()
 
@@ -211,8 +193,7 @@ async def get_target_progress(
     target_id: str,
     scenario_id: str | None = None,
 ) -> TargetProgressResponse:
-    ctx = await _get_context(db, org_id)
-    t = await _get_target(db, target_id, ctx.id)
+    t = await _get_target(db, target_id, org_id)
 
     current = await _current_emissions_tonnes(db, org_id, t.scope_coverage)
 

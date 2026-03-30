@@ -7,6 +7,8 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { api } from "../../services/api";
 import type { Target, TargetProgress } from "../../types/scenarios";
+import { Button } from '../common/Button';
+import { Badge } from "../common/Badge";
 
 interface TargetListProps {
   targets: Target[];
@@ -65,7 +67,7 @@ function TargetProgressBar({
           style={{ width: `${pct}%` }}
         />
       </div>
-      <div className="flex justify-between text-xs text-gray-400">
+      <div className="flex justify-between text-xs text-gray-600">
         <span>
           Projected: {progress.projected_co2e_tonnes.toLocaleString()} t
         </span>
@@ -83,7 +85,7 @@ export function TargetList({ targets, onTargetDeleted, scenarioId }: TargetListP
 
   if (targets.length === 0) {
     return (
-      <div className="text-center py-8 text-sm text-gray-400">
+      <div className="text-center py-8 text-sm text-gray-600">
         No targets defined yet. Add your first emission reduction target above.
       </div>
     );
@@ -102,13 +104,9 @@ export function TargetList({ targets, onTargetDeleted, scenarioId }: TargetListP
                 <span className="text-sm font-semibold text-gray-900">
                   {t.target_year}
                 </span>
-                <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 capitalize">
-                  {t.target_type}
-                </span>
+                <Badge variant="info">{t.target_type}</Badge>
                 {t.source && (
-                  <span className="rounded-full bg-gray-200 px-2 py-0.5 text-xs text-gray-600">
-                    {t.source}
-                  </span>
+                  <Badge variant="default">{t.source}</Badge>
                 )}
               </div>
               <p className="text-sm text-gray-600 mt-0.5">
@@ -122,7 +120,7 @@ export function TargetList({ targets, onTargetDeleted, scenarioId }: TargetListP
                 )}
               </p>
               {t.scope_coverage && t.scope_coverage.length > 0 && (
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-600 mt-0.5">
                   Scopes: {t.scope_coverage.join(", ")}
                 </p>
               )}
@@ -130,16 +128,18 @@ export function TargetList({ targets, onTargetDeleted, scenarioId }: TargetListP
                 <p className="text-xs text-gray-500 mt-0.5 italic">{t.notes}</p>
               )}
             </div>
-            <button
+            <Button
+              variant="danger"
+              size="sm"
+              disabled={deleteMutation.isPending}
+              loading={deleteMutation.isPending}
               onClick={() => {
-                if (!confirm("Delete this target?")) return;
+                if (!confirm('Delete this target?')) return;
                 deleteMutation.mutate(t.id);
               }}
-              disabled={deleteMutation.isPending}
-              className="text-xs text-red-500 hover:text-red-700 flex-shrink-0 mt-0.5"
             >
               Delete
-            </button>
+            </Button>
           </div>
 
           {/* Progress bar (live from API) */}

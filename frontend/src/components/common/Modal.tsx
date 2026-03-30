@@ -1,5 +1,17 @@
 // ─── Modal ────────────────────────────────────────────────────────────────────
-import { useEffect, useRef } from 'react';
+// Prism-migrated: wraps @ecoonline/prism-web-components-react PrismDialog.
+//
+// PrismDialog API:
+//   open (boolean)         — controls visibility
+//   label (string)         — dialog title displayed in header
+//   onRequestClose (fn)    — called when user requests close (X button, Escape,
+//                            backdrop click via 'p-request-close' custom event)
+//
+// Footer slot: pass <PrismButton slot="footer"> children into PrismDialog.
+// The description prop is rendered as content before main children.
+
+import { useEffect } from 'react';
+import { PrismDialog } from '../../prism';
 
 interface ModalProps {
   open: boolean;
@@ -11,13 +23,6 @@ interface ModalProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-const sizeClass = {
-  sm: 'max-w-sm',
-  md: 'max-w-lg',
-  lg: 'max-w-2xl',
-  xl: 'max-w-4xl',
-};
-
 export function Modal({
   open,
   onClose,
@@ -25,67 +30,35 @@ export function Modal({
   description,
   children,
   footer,
-  size = 'md',
 }: ModalProps) {
-  const overlayRef = useRef<HTMLDivElement>(null);
+  if (!open) return null;
 
-  // Close on Escape
+  // PrismDialog handles Escape internally via its `onRequestClose` event.
+  // We also listen for keydown here as a fallback for consumers expecting
+  // direct Escape handling (e.g. unit tests firing document keydown).
   useEffect(() => {
-    if (!open) return;
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     document.addEventListener('keydown', handler);
     return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-
-  if (!open) return null;
+  }, [onClose]);
 
   return (
-    <div
-      ref={overlayRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-      onClick={(e) => {
-        if (e.target === overlayRef.current) onClose();
-      }}
+    <PrismDialog
+      open={open}
+      label={title}
+      onRequestClose={onClose}
     >
-      <div
-        className={`relative w-full ${sizeClass[size]} rounded-lg bg-white shadow-xl`}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="modal-title"
-      >
-        {/* Header */}
-        <div className="flex items-start justify-between border-b border-gray-200 px-6 py-4">
-          <div>
-            <h2 id="modal-title" className="text-base font-semibold text-gray-900">
-              {title}
-            </h2>
-            {description && (
-              <p className="mt-1 text-sm text-gray-500">{description}</p>
-            )}
-          </div>
-          <button
-            onClick={onClose}
-            className="ml-4 rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            aria-label="Close"
-          >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-            </svg>
-          </button>
+      {description && (
+        <p className="mb-4 text-sm text-gray-500">{description}</p>
+      )}
+      {children}
+      {footer && (
+        <div slot="footer" className="flex items-center justify-end gap-3">
+          {footer}
         </div>
-
-        {/* Body */}
-        <div className="px-6 py-4">{children}</div>
-
-        {/* Footer */}
-        {footer && (
-          <div className="flex items-center justify-end gap-3 border-t border-gray-200 px-6 py-4">
-            {footer}
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </PrismDialog>
   );
 }

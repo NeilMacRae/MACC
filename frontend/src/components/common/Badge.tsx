@@ -1,4 +1,17 @@
 // ─── Badge ────────────────────────────────────────────────────────────────────
+// Prism-migrated: wraps @ecoonline/prism-web-components-react PrismBadge.
+//
+// PrismBadge variants: 'primary' | 'success' | 'neutral' | 'warning' | 'danger'
+//
+// Variant mapping:
+//   default  → 'neutral'
+//   success  → 'success'
+//   warning  → 'warning'
+//   danger   → 'danger'
+//   info     → 'primary'
+//   purple   → 'primary' (no purple in Prism; use primary as closest)
+
+import { PrismBadge } from '../../prism';
 
 export type BadgeVariant =
   | 'default'
@@ -14,21 +27,19 @@ interface BadgeProps {
   className?: string;
 }
 
-const variantClass: Record<BadgeVariant, string> = {
-  default: 'bg-gray-100 text-gray-700',
-  success: 'bg-green-100 text-green-800',
-  warning: 'bg-yellow-100 text-yellow-800',
-  danger: 'bg-red-100 text-red-800',
-  info: 'bg-blue-100 text-blue-800',
-  purple: 'bg-purple-100 text-purple-800',
+const PRISM_VARIANT: Record<BadgeVariant, 'primary' | 'success' | 'neutral' | 'warning' | 'danger'> = {
+  default: 'neutral',
+  success: 'success',
+  warning: 'warning',
+  danger: 'danger',
+  info: 'primary',
+  purple: 'primary',
 };
 
-export function Badge({ variant = 'default', children, className = '' }: BadgeProps) {
+export function Badge({ variant = 'default', children, className }: BadgeProps) {
   return (
-    <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${variantClass[variant]} ${className}`}
-    >
+    <PrismBadge variant={PRISM_VARIANT[variant]} pill className={className}>
       {children}
-    </span>
+    </PrismBadge>
   );
 }

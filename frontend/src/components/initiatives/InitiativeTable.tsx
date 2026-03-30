@@ -12,6 +12,8 @@
  */
 
 import { useState } from "react";
+import { PrismOption, PrismSelect } from "../../prism";
+import { Button } from "../common/Button";
 import { useInitiatives } from "../../hooks/useInitiatives";
 import type {
   InitiativeFilters,
@@ -98,43 +100,41 @@ export function InitiativeTable({ onEdit, onSelect, selectedId }: Props) {
   const totalPages = data?.total_pages ?? 0;
 
   return (
-    <div className="space-y-3">
+    <div data-prism="table" className="space-y-3">
       {/* Filters bar */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Status filter */}
-        <select
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <PrismSelect
           value={filters.status ?? ""}
           onChange={(e) =>
-            setFilters((f) => ({ ...f, status: e.target.value || undefined, page: 1 }))
+            setFilters((f) => ({ ...f, status: (e.target as HTMLSelectElement).value || undefined, page: 1 }))
           }
         >
-          <option value="">All statuses</option>
+          <PrismOption value="">All statuses</PrismOption>
           {ALL_STATUSES.map((s) => (
-            <option key={s} value={s}>
+            <PrismOption key={s} value={s}>
               {s.replace("_", " ").replace(/^\w/, (c) => c.toUpperCase())}
-            </option>
+            </PrismOption>
           ))}
-        </select>
+        </PrismSelect>
 
         {/* Type filter */}
-        <select
-          className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <PrismSelect
           value={filters.initiative_type ?? ""}
           onChange={(e) =>
             setFilters((f) => ({
               ...f,
-              initiative_type: (e.target.value as "custom" | "ai_suggested") || undefined,
+              initiative_type: ((e.target as HTMLSelectElement).value as "custom" | "ai_suggested") || undefined,
               page: 1,
             }))
           }
         >
-          <option value="">All types</option>
-          <option value="custom">Custom</option>
-          <option value="ai_suggested">AI-suggested</option>
-        </select>
+          <PrismOption value="">All types</PrismOption>
+          <PrismOption value="custom">Custom</PrismOption>
+          <PrismOption value="ai_suggested">AI-suggested</PrismOption>
+        </PrismSelect>
 
-        <span className="ml-auto text-xs text-gray-400">
+        <span className="ml-auto text-xs text-gray-600">
           {total} initiative{total !== 1 ? "s" : ""}
         </span>
       </div>
@@ -145,7 +145,7 @@ export function InitiativeTable({ onEdit, onSelect, selectedId }: Props) {
           No initiatives found. Create one to get started.
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <div className="overflow-x-auto rounded-lg border border-gray-200" tabIndex={0} role="region" aria-label="Initiatives table">
           <table className="min-w-full divide-y divide-gray-200 text-sm">
             <thead className="bg-gray-50">
               <tr>
@@ -186,19 +186,24 @@ export function InitiativeTable({ onEdit, onSelect, selectedId }: Props) {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="flex items-center justify-center gap-2">
-          <button
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
             disabled={(filters.page ?? 1) <= 1}
             onClick={() =>
               setFilters((f) => ({ ...f, page: Math.max(1, (f.page ?? 1) - 1) }))
             }
-            className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             ← Prev
-          </button>
+          </Button>
           <span className="text-xs text-gray-500">
             Page {filters.page ?? 1} of {totalPages}
           </span>
-          <button
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
             disabled={(filters.page ?? 1) >= totalPages}
             onClick={() =>
               setFilters((f) => ({
@@ -206,10 +211,9 @@ export function InitiativeTable({ onEdit, onSelect, selectedId }: Props) {
                 page: Math.min(totalPages, (f.page ?? 1) + 1),
               }))
             }
-            className="rounded border border-gray-300 px-3 py-1 text-xs text-gray-700 hover:bg-gray-50 disabled:opacity-40"
           >
             Next →
-          </button>
+          </Button>
         </div>
       )}
     </div>

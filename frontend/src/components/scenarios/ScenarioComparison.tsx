@@ -8,6 +8,7 @@
 
 import { useCompareScenarios } from "../../hooks/useScenarios";
 import type { ScenarioCompareItem } from "../../types/scenarios";
+import { Badge } from "../common/Badge";
 
 interface ScenarioComparisonProps {
   scenarioIds: string[];
@@ -65,7 +66,7 @@ export function ScenarioComparison({ scenarioIds }: ScenarioComparisonProps) {
 
   if (scenarioIds.length < 2) {
     return (
-      <div className="text-sm text-gray-400 py-4 text-center">
+      <div className="text-sm text-gray-600 py-4 text-center">
         Select at least 2 scenarios to compare
       </div>
     );
@@ -73,7 +74,7 @@ export function ScenarioComparison({ scenarioIds }: ScenarioComparisonProps) {
 
   if (isLoading) {
     return (
-      <div className="text-sm text-gray-400 py-4 text-center">
+      <div className="text-sm text-gray-600 py-4 text-center">
         Loading comparison…
       </div>
     );
@@ -107,9 +108,7 @@ export function ScenarioComparison({ scenarioIds }: ScenarioComparisonProps) {
                   <div className="flex flex-col items-end gap-0.5">
                     <span>{s.name}</span>
                     {s.is_baseline && (
-                      <span className="rounded-full bg-blue-100 px-1.5 py-0.5 text-[10px] font-medium text-blue-700 normal-case">
-                        Baseline
-                      </span>
+                      <Badge variant="info">Baseline</Badge>
                     )}
                   </div>
                 </th>
@@ -185,12 +184,9 @@ export function ScenarioComparison({ scenarioIds }: ScenarioComparisonProps) {
           </h4>
           <div className="flex flex-wrap gap-2">
             {data.shared_initiatives.map((i) => (
-              <span
-                key={i.id}
-                className="rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-700"
-              >
+              <Badge key={i.id} variant="purple">
                 {i.name}
-              </span>
+              </Badge>
             ))}
           </div>
         </div>
@@ -207,16 +203,13 @@ export function ScenarioComparison({ scenarioIds }: ScenarioComparisonProps) {
                 <span className="text-gray-900">{s.name}</span> ({unique.length})
               </h4>
               {unique.length === 0 ? (
-                <p className="text-xs text-gray-400">None</p>
+                <p className="text-xs text-gray-600">None</p>
               ) : (
                 <div className="space-y-1">
                   {unique.map((i) => (
-                    <span
-                      key={i.id}
-                      className="block rounded bg-gray-100 px-2.5 py-1 text-xs text-gray-700"
-                    >
+                    <Badge key={i.id} variant="default">
                       {i.name}
-                    </span>
+                    </Badge>
                   ))}
                 </div>
               )}

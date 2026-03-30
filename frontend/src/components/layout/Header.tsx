@@ -1,4 +1,7 @@
-// ─── Page header ──────────────────────────────────────────────────────────────
+// ─── Page section header ──────────────────────────────────────────────────────
+// Per-page title bar rendered at the top of each page's content area.
+// PrismHeader (pwc-header) is the app-wide branded top bar in PageLayout;
+// this component is the semantic page-title heading below it.
 
 interface HeaderProps {
   title: string;
@@ -8,12 +11,26 @@ interface HeaderProps {
 
 export function Header({ title, subtitle, actions }: HeaderProps) {
   return (
-    <header className="flex h-16 items-center justify-between border-b border-gray-200 bg-white px-6">
-      <div>
-        <h1 className="text-lg font-semibold text-gray-900">{title}</h1>
-        {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+    <header className="px-6 pt-6 pb-0">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1
+            className="text-2xl font-bold"
+            style={{ color: 'var(--alias-color-text-default, #16191d)' }}
+          >
+            {title}
+          </h1>
+          {subtitle && (
+            <p
+              className="mt-0.5 text-sm"
+              style={{ color: 'var(--alias-color-text-reduced, #566576)' }}
+            >
+              {subtitle}
+            </p>
+          )}
+        </div>
+        {actions && <div className="flex items-center gap-3">{actions}</div>}
       </div>
-      {actions && <div className="flex items-center gap-3">{actions}</div>}
     </header>
   );
 }
