@@ -52,6 +52,7 @@ def upgrade() -> None:
     #   - replace the old index with a new one on organisation_id
     with op.batch_alter_table("emission_targets", schema=None) as batch_op:
         batch_op.drop_index("ix_emission_targets_context_year")
+        batch_op.drop_constraint("fk_emission_targets_context_id", type_="foreignkey")
         batch_op.drop_column("context_id")
         batch_op.alter_column(
             "organisation_id",
