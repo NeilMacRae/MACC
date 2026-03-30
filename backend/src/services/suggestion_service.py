@@ -151,7 +151,7 @@ async def request_ai_suggestions(
         await _validate_suggestions(db, organisation_id, ai_response.suggestions)
 
         # Persist request and suggestions
-        await _persist_request_and_suggestions(
+        db_request = await _persist_request_and_suggestions(
             db=db,
             request_id=request_id,
             organisation_id=organisation_id,
@@ -160,14 +160,8 @@ async def request_ai_suggestions(
             latency_ms=latency_ms,
         )
 
-        # Build response
-        return _build_suggestion_response(
-            request_id=UUID(request_id),
-            ai_response=ai_response,
-            org_context=org_context,
-            emissions_profile=emissions_profile,
-            constraint_config_applied=constraints is not None,
-        )
+        # Build response from persisted records so IDs match the DB
+        return await _build_response_from_cached(db, db_request)
 
     except Exception as e:
         # Persist failed request
@@ -536,8 +530,8 @@ async def _persist_request_and_suggestions(
     input_hash: str,
     ai_response: OpenAISuggestionResponse,
     latency_ms: int,
-) -> None:
-    """Persist AI request and suggestions to database."""
+) -> AISuggestionRequest:
+    """Persist AI request and suggestions to database. Returns the created request record."""
     # Create request record
     db_request = AISuggestionRequest(
         id=request_id,
@@ -588,6 +582,7 @@ async def _persist_request_and_suggestions(
         db.add(db_suggestion)
 
     await db.commit()
+    return db_request
 
 
 async def _persist_failed_request(
