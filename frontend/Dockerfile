@@ -58,13 +58,15 @@ FROM nginx:alpine AS prod
 # Copy built static assets
 COPY --from=build /app/dist /usr/share/nginx/html
 
-# Copy nginx config template — BACKEND_URL is
-# substituted at container start via envsubst.
+# Copy nginx config template and a custom entrypoint that scopes envsubst
+# to only our variables (PORT, BACKEND_URL), leaving nginx's own $vars intact.
 COPY nginx.conf /etc/nginx/templates/default.conf.template
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
 
-# Default backend address for docker-compose
+# Defaults — Railway overrides PORT; docker-compose overrides BACKEND_URL
+ENV PORT=80
 ENV BACKEND_URL=backend:8000
 
-# nginx:alpine auto-runs envsubst on templates/ at start
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
+CMD ["/docker-entrypoint.sh"]
