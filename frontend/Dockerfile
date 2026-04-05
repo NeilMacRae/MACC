@@ -40,6 +40,10 @@ ARG NPM_TOKEN
 # Defaults to /api/v1 (relative) for local docker-compose where nginx proxies.
 ARG VITE_API_BASE_URL=/api/v1
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+# VITE_DEV_TOKEN is baked into the JS bundle at build time.
+# Set to a long-lived JWT in Railway service variables.
+ARG VITE_DEV_TOKEN
+ENV VITE_DEV_TOKEN=$VITE_DEV_TOKEN
 
 COPY package.json package-lock.json ./
 RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
