@@ -6,7 +6,7 @@
 > to locate code, understand data flow, and determine where changes
 > should be made.
 >
-> **Last updated**: 2026-03-01
+> **Last updated**: 2026-04-05
 
 ---
 
@@ -26,7 +26,9 @@ comparison, and request AI-generated reduction suggestions.
 │                       Backend (FastAPI)                     │
 │  uvicorn :8000 · async SQLAlchemy · Pydantic v2             │
 ├─────────────────────────────────────────────────────────────┤
-│  SQLite (aiosqlite)  │  Anthropic API (claude-sonnet-4-6)   │
+│  PostgreSQL 15 (asyncpg)  │  Anthropic API (claude-sonnet-4-6)   │
+├─────────────────────────────────────────────────────────────┤
+│           Docker Compose (local dev) / Railway (prod)       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -36,7 +38,12 @@ comparison, and request AI-generated reduction suggestions.
   the REST API surface under `/api/v1/`.
 - The frontend Vite dev server proxies `/api/*` requests to the
   backend — there is no shared process.
-- SQLite is the sole data store (WAL mode, async via aiosqlite).
+- **PostgreSQL 15** is the sole data store (asyncpg driver). SQLite has
+  been fully removed. `DATABASE_URL` is required or the app fails fast.
+- Local dev uses **docker-compose** with four services: `backend`,
+  `frontend`, `db` (port 5432), `test-db` (port 5433).
+- Production runs on **Railway** — the backend `entrypoint.sh`
+  auto-runs `alembic upgrade head` when `RAILWAY_ENVIRONMENT` is set.
 - AI features call the Anthropic API directly; there is no LLM
   abstraction layer.
 
@@ -46,13 +53,17 @@ comparison, and request AI-generated reduction suggestions.
 
 ```
 MACC/
+├── docker-compose.yml         # Full stack: backend, frontend, db, test-db
 ├── Makefile                   # Convenience targets (see §10)
 ├── backend/
+│   ├── Dockerfile             # Multi-stage: dev (hot-reload) + prod (Railway)
+│   ├── entrypoint.sh          # Prod entrypoint: auto-migrate + uvicorn
+│   ├── .env.example           # Docker-compose env defaults (committed)
 │   ├── pyproject.toml         # Python deps & project metadata
-│   ├── alembic.ini            # DB migration config
+│   ├── alembic.ini            # DB migration config (DATABASE_URL required)
 │   ├── alembic/
-│   │   ├── env.py             # Migration runner (async SQLite)
-│   │   └── versions/          # Migration scripts (3 migrations)
+│   │   ├── env.py             # Migration runner (async PostgreSQL)
+│   │   └── versions/          # Migration scripts (4 migrations)
 │   ├── src/
 │   │   ├── api/               # FastAPI routers & middleware
 │   │   │   ├── main.py        # App factory, CORS, router mounts
@@ -94,6 +105,8 @@ MACC/
 │   ├── dev_token.py           # Generate dev JWT tokens
 │   └── smoke_test.py          # Quick API health check
 ├── frontend/
+│   ├── Dockerfile             # Multi-stage: dev (Vite HMR) + prod (nginx)
+│   ├── nginx.conf             # Prod nginx config: SPA routing + /api proxy
 │   ├── package.json
 │   ├── vite.config.ts         # Dev server + /api proxy
 │   ├── tsconfig.json
@@ -148,7 +161,7 @@ HTTP request
   → Router handler (api/*.py)
   → Service layer (services/*.py)
   → SQLAlchemy ORM (models/*.py)
-  → SQLite (aiosqlite)
+  → PostgreSQL 15 (asyncpg)
   → Pydantic response schema
   → JSON response
 ```

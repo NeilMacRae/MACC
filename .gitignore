@@ -12,6 +12,8 @@ Thumbs.db
 # Environment files
 .env
 .env.*
+backend/.env
+frontend/.env.local
 
 # Python
 __pycache__/
@@ -32,6 +34,7 @@ venv/
 # Backend local DB
 backend/*.db
 backend/*.db-*
+backend/.dev-token
 
 # Node / Frontend
 node_modules/
