@@ -35,6 +35,11 @@ FROM node:20-alpine AS build
 WORKDIR /app
 
 ARG NPM_TOKEN
+# VITE_API_BASE_URL is baked into the JS bundle at build time.
+# Set to the backend's public URL in Railway (e.g. https://macc-production.up.railway.app/api/v1).
+# Defaults to /api/v1 (relative) for local docker-compose where nginx proxies.
+ARG VITE_API_BASE_URL=/api/v1
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 
 COPY package.json package-lock.json ./
 RUN echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
