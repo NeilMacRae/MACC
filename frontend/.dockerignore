@@ -1,0 +1,30 @@
+# Node
+node_modules/
+
+# Build output
+dist/
+build/
+.vite/
+
+# Test artifacts
+test-results/
+playwright-report/
+coverage/
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.*
+.env.local
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Logs
+*.log

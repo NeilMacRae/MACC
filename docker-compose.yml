@@ -1,0 +1,72 @@
+services:
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: macc
+      POSTGRES_USER: macc
+      POSTGRES_PASSWORD: macc
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U macc -d macc"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  test-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: macc_test
+      POSTGRES_USER: macc
+      POSTGRES_PASSWORD: macc
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-test:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U macc -d macc_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: dev
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://macc:macc@db:5432/macc
+      TEST_DATABASE_URL: postgresql+asyncpg://macc:macc@test-db:5433/macc_test
+    volumes:
+      - ./backend/src:/app/src
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      target: dev
+      args:
+        NPM_TOKEN: ${NPM_TOKEN}
+    ports:
+      - "5173:5173"
+    environment:
+      BACKEND_URL: http://backend:8000
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/.env.local:/app/.env.local
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:
+  pgdata-test:

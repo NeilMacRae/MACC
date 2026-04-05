@@ -1,29 +1,27 @@
 """SQLAlchemy async engine and session factory.
 
-Uses DATABASE_URL from the environment.  Defaults to SQLite for local dev;
-set DATABASE_URL to a postgresql+asyncpg:// connection string in production.
+Requires DATABASE_URL environment variable (postgresql+asyncpg:// or postgres://).
 """
 
 from __future__ import annotations
 
 import os
 from collections.abc import AsyncGenerator
-from typing import Any
 
-from sqlalchemy import event, text
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
 
-_DEFAULT_DB = "sqlite+aiosqlite:///./macc.db"
-DATABASE_URL = os.getenv("DATABASE_URL", _DEFAULT_DB)
+_raw_url = os.getenv("DATABASE_URL")
+if not _raw_url:
+    raise RuntimeError("DATABASE_URL environment variable is required")
 
 # Railway Postgres URLs use the postgres:// scheme; SQLAlchemy requires postgresql+asyncpg://
-if DATABASE_URL.startswith("postgres://"):
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
-elif DATABASE_URL.startswith("postgresql://") and "+" not in DATABASE_URL:
-    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
+if _raw_url.startswith("postgres://"):
+    _raw_url = _raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+elif _raw_url.startswith("postgresql://") and "+" not in _raw_url:
+    _raw_url = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-_IS_SQLITE = DATABASE_URL.startswith("sqlite")
+DATABASE_URL: str = _raw_url
 
 
 class Base(DeclarativeBase):
@@ -36,25 +34,10 @@ class Base(DeclarativeBase):
 # Engine
 # ---------------------------------------------------------------------------
 
-_connect_args: dict[str, Any] = {"check_same_thread": False} if _IS_SQLITE else {}
-
 engine = create_async_engine(
     DATABASE_URL,
     echo=False,
-    connect_args=_connect_args,
 )
-
-
-if _IS_SQLITE:
-    @event.listens_for(engine.sync_engine, "connect")
-    def _set_sqlite_pragmas(dbapi_conn: Any, _connection_record: Any) -> None:  # noqa: ANN401
-        """Enable WAL mode, FK enforcement, and set a generous busy timeout."""
-        cursor = dbapi_conn.cursor()
-        cursor.execute("PRAGMA journal_mode=WAL")
-        cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.execute("PRAGMA busy_timeout=5000")
-        cursor.execute("PRAGMA cache_size=-64000")  # 64 MB
-        cursor.close()
 
 
 # ---------------------------------------------------------------------------

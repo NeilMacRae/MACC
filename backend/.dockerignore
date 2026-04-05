@@ -1,0 +1,39 @@
+# Python artifacts
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.egg-info/
+*.egg
+dist/
+build/
+
+# Tests
+tests/
+
+# Git
+.git/
+.gitignore
+
+# Local environment
+.env
+.env.*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Alembic SQLite artifacts
+*.db
+*.db-*
+
+# Type checking / lint caches
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
